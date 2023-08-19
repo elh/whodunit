@@ -102,10 +102,11 @@
         (membero (new-rec {:drinks "water"}) q)
         (membero (new-rec {:pet "zebra"}) q))))))
 
-;; Evaluates if input is fully grounded. Returns true if input and all collection elements have no symbols.
-;; This could be improved with a built-in core.logic approach or tighter check on the symbol names.
+;; Evaluates if input is fully grounded. Returns true if input contains no core.logic symbols like `'_0`.
+;; TODO: If built-in core.logic approach is found, replace this.
 (defn grounded? [x]
-  (not-any? #(instance? clojure.lang.Symbol %)
+  (not-any? (fn [x] (and (instance? clojure.lang.Symbol x)
+                         (boolean (re-matches #"_\d+" (name x)))))
             (tree-seq coll? seq x)))
 
 ;; Runs the goal with timing and returns the first solution, if it's grounded, and if there are more solutions.
@@ -118,7 +119,7 @@
      :has-more? (> (count res) 1)}))
 
 (defn -main []
-  (println "\n---------- Zebra Puzzle - using vectors ----------")
+  (println "---------- Zebra Puzzle - using vectors ----------")
   (pp/pprint (run-with-context zebrao-vec))
   (println "\n---------- Zebra Puzzle - using maps ----------")
   (pp/pprint (run-with-context zebrao)))
