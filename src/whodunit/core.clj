@@ -64,12 +64,12 @@
            (nexto [x y]
                   (conde [(fd/+ x 1 y)]
                          [(fd/- x 1 y)]))
-           (house-ordero [idx-rel x y hs]
+           (ordero [idx-rel key x y hs]
                          (fresh [x-idx y-idx]
                                 (membero x hs)
                                 (membero y hs)
-                                (== x (new-rec {:house-idx x-idx}))
-                                (== y (new-rec {:house-idx y-idx}))
+                                (== x (new-rec {key x-idx}))
+                                (== y (new-rec {key y-idx}))
                                 (idx-rel x-idx y-idx)))]
      (let [answers (map #(new-rec {:house-idx %}) (range 1 6))]
        (run 1 [q]
@@ -82,7 +82,7 @@
                                :drinks "coffee"}) q)
             (membero (new-rec {:nationality "ukrainian"
                                :drinks "tea"}) q)
-            (house-ordero righto (new-rec {:house-color "ivory"}) (new-rec {:house-color "green"}) q)
+            (ordero righto :house-idx (new-rec {:house-color "ivory"}) (new-rec {:house-color "green"}) q)
             (membero (new-rec {:smokes "old-gold"
                                :pet "snail"}) q)
             (membero (new-rec {:house-color "yellow"
@@ -91,13 +91,13 @@
                                :drinks "milk"}) q)
             (membero (new-rec {:house-idx 1
                                :nationality "norwegian"}) q)
-            (house-ordero nexto (new-rec {:smokes "chesterfields"}) (new-rec {:pet "fox"}) q)
-            (house-ordero nexto (new-rec {:smokes "kools"}) (new-rec {:pet "horse"}) q)
+            (ordero nexto :house-idx (new-rec {:smokes "chesterfields"}) (new-rec {:pet "fox"}) q)
+            (ordero nexto :house-idx (new-rec {:smokes "kools"}) (new-rec {:pet "horse"}) q)
             (membero (new-rec {:drinks "orange-juice"
                                :smokes "lucky-strike"}) q)
             (membero (new-rec {:nationality "japanese"
                                :smokes "parliaments"}) q)
-            (house-ordero nexto (new-rec {:nationality "norwegian"}) (new-rec {:house-color "blue"}) q)
+            (ordero nexto :house-idx (new-rec {:nationality "norwegian"}) (new-rec {:house-color "blue"}) q)
             ;; implied by question
             (membero (new-rec {:drinks "water"}) q)
             (membero (new-rec {:pet "zebra"}) q))))))
