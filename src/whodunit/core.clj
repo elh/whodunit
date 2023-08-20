@@ -112,9 +112,10 @@
             (tree-seq coll? seq x)))
 
 ;; Runs the goal with timing and returns the first solution, if it's grounded, and if there are more solutions.
+;; note that this function takes a lot longer than the underlying call to run*. removing timing for now.
 ;; TODO: optionally return all solutions. useful for analysis. e.g. ">1 solution but A=true in all of them"
 (defn run-with-context [goal]
-  (let [res (run* [q] (time (goal q)))
+  (let [res (run* [q] (goal q))
         soln (first res)
         is-grounded (grounded? soln)]
     {:soln soln
@@ -172,24 +173,36 @@
         k2 (first (shuffle (remove #{k1} ks)))
         v1 (rand-nth (get-in config [:values k1]))
         v2 (rand-nth (get-in config [:values k2]))]
-    (println "DEBUG:" k1 "=" v1 "," k2 "=" v2)
+    (println "DEBUG - generate-rule:" k1 "=" v1 "," k2 "=" v2)
     (membero (new-rec config {k1 v1
                               k2 v2}) q)))
 
 ;; config values must always contain :name and :guilty
-;; TODO: loop until 1 fully bound solution
+;; TODO: prevent redundant rules
+;; TODO: only generate discriminating rules? ones that reduce the solution space?
 ;; TODO: stop based on a condition. e.g. "we know who is guilty"
 (defn puzzle [config]
   (let [hs (lvar)                            ;; so rules can be declared outside of run
-        lvars (init-lvars config)
-        new-rule (generate-rule config hs)]
-    (run-with-context (fn [q]
-                        (all
-                         (== hs q)
-                         (== q (get lvars :records))
-                         (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
-                                 (keys (get lvars :values)))
-                         new-rule)))))
+        lvars (init-lvars config)]
+    (loop [rules '()]
+      (let [new-rules (cons (generate-rule config hs) rules)
+            res (run-with-context (fn [q]
+                                    (and*
+                                     (conj new-rules
+                                           (== hs q)
+                                           (== q (get lvars :records))
+                                           ;; pin order of :name to prevent redundant solutions
+                                           (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+                                           ;; defining solution space given the config. this could be made more flexible
+                                           (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                                   (keys (get lvars :values)))))))]
+        (if (nil? (:soln res))
+          (recur rules)
+          (if (and (:grounded? res) (= (:soln-count res) 1))
+            new-rules
+            (do
+              (println "DEBUG - added rule: (count new-rules) =" (count new-rules) "(:soln-count res) =" (:soln-count res))
+              (recur new-rules))))))))
 
 (defn -main []
   (let [example-config {:values {:name ["alice" "bob" "carol"]
