@@ -7,6 +7,7 @@
             [clojure.pprint :as pp]))
 
 (def DEBUG false)
+(def DEBUG-ALL-SOLNS false)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; The Zebra Puzzle. see https://en.wikipedia.org/wiki/Zebra_Puzzle
@@ -169,7 +170,7 @@
         v1 (rand-nth (get-in config [:values k1]))
         v2 (rand-nth (get-in config [:values k2]))
         kvs #{[k1 v1]
-             [k2 v2]}]
+              [k2 v2]}]
     (when DEBUG (println "DEBUG - generate-rule: type = membero, kvs =" kvs))
     {:data {:type :membero
             :kvs kvs}
@@ -180,6 +181,9 @@
 ;; Config :values define the set of possible records key-values. unique :name values are required.
 ;; Returns a list of rules with :goal function and structured :data map
 ;; No fully redundant rules are included.
+;;
+;; The number of possible solutions is the product of the number of unique orderings for each non :name field
+;; In the default case where all values are unique this is (n!)^m!
 ;;
 ;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 (defn puzzle [config]
@@ -196,7 +200,7 @@
                                (== (get-in config [:values :name]) (get-in lvars [:values :name]))
                                ;; defining solution space given the config. this could be made more flexible
                                (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
-                                       (keys (get lvars :values)))))))]
+                                       (keys (get lvars :values)))))) DEBUG-ALL-SOLNS)]
         (if (or (nil? (:soln res))
                 (= soln-count (:soln-count res)))
           (recur rules soln-count)
@@ -205,9 +209,23 @@
             (do
               (when DEBUG
                 (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions")
-                ;; (println "DEBUG - solns:" (:solns res))
-                )
+                (when DEBUG-ALL-SOLNS
+                  (println "DEBUG - solns:")
+                  (pp/pprint (:solns res))))
               (recur new-rules (:soln-count res)))))))))
+
+(defn puzzle-base-count [config]
+  (let [lvars (init-lvars config)
+        res (run+ (fn [q]
+                    (and*
+                     (list
+                      (== q (get lvars :records))
+                      ;; pin order of :name to prevent redundant solutions
+                      (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+                      ;; defining solution space given the config. this could be made more flexible
+                      (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                              (keys (get lvars :values)))))) DEBUG-ALL-SOLNS)]
+    (:soln-count res)))
 
 ;; Jank text generation
 (defn rules-text [rules]
@@ -229,7 +247,32 @@
     (doseq [[idx item] (map-indexed vector (rules-text rules))]
       (println (str (inc idx) ".") item)))
 
-  (println "\n---------- Zebra Puzzle - using vectors ----------")
-  (pp/pprint (run+ zebrao-vec))
-  (println "\n---------- Zebra Puzzle - using maps ----------")
-  (pp/pprint (run+ zebrao)))
+;;     (println (time (puzzle-base-count example-config))))
+;;
+;;   (println "\n---------- Zebra Puzzle - using vectors ----------")
+;;   (pp/pprint (run+ zebrao-vec))
+;;   (println "\n---------- Zebra Puzzle - using maps ----------")
+;;   (pp/pprint (run+ zebrao))
+  )
+
+;; some example configs. testing complexity
+;; {:values {:name ["alice" "bob"]
+;;           :guilty [true false]
+;;           :color ["red" "blue"]
+;;           :location ["park" "pier"]}}
+;;
+;; {:values {:name ["alice" "bob" "carol"]
+;;           :guilty [true false false]
+;;           :color ["red" "blue" "green"]
+;;           :location ["park" "pier" "palace"]}}
+;;
+;; {:values {:name ["alice" "bob" "carol" "dave"]
+;;           :guilty [true false false false]
+;;           :color ["red" "blue" "green" "white"]
+;;           :location ["park" "pier" "palace" "plaza"]}}
+;;
+;; ;; solution space is too large for a full state space search...
+;; {:values {:name ["alice" "bob" "carol" "dave" "eve"]
+;;           :guilty [true false false false false]
+;;           :color ["red" "red" "green" "yellow" "blue"]       ;; 2 reds
+;;           :location ["park" "park" "pier" "pier" "palace"]}} ;; 2 parks, 2 piers
