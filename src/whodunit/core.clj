@@ -9,7 +9,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; The Zebra Puzzle. see https://en.wikipedia.org/wiki/Zebra_Puzzle
 
-;; result binding is a vec of [house-idx house-color nationality drinks smokes pet] vecs
+;; Result binding is a vec of [house-idx house-color nationality drinks smokes pet] vecs
 (defn zebrao-vec [q]
   (macro/symbol-macrolet
    [_ (lvar)]
@@ -49,7 +49,7 @@
         (membero [_ _ _ "water" _ _] q)
         (membero [_ _ _ _ _ "zebra"] q))))))
 
-;; my preferred, more extensible map approach
+;; My preferred, more extensible map approach
 (defn zebrao [q]
   (macro/symbol-macrolet
    [_ (lvar)]
@@ -105,15 +105,17 @@
         (membero (new-rec {:pet "zebra"}) q))))))
 
 ;; Evaluates if input is fully grounded. Returns true if input contains no core.logic symbols like `'_0`.
+;;
 ;; TODO: If built-in core.logic approach is found, replace this.
 (defn grounded? [x]
   (not-any? (fn [x] (and (instance? clojure.lang.Symbol x)
                          (boolean (re-matches #"_\d+" (name x)))))
             (tree-seq coll? seq x)))
 
-;; Runs the goal with timing and returns the first solution, if it's grounded, and if there are more solutions.
-;; note that this function takes a lot longer than the underlying call to run*. removing timing for now.
-;; TODO: optionally return all solutions. useful for analysis. e.g. ">1 solution but A=true in all of them"
+;; Runs the goal returning the first solution, if it's grounded, and if there are more solutions.
+;; Note that this function takes a lot longer than the underlying call to run*.
+;;
+;; TODO: consider optionally returning all solutions. useful for analysis. e.g. ">1 solution but A=true in all of them"
 (defn run-with-context [goal]
   (let [res (run* [q] (goal q))
         soln (first res)
@@ -125,28 +127,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Generation of logic puzzle hints
-;; Example
+;; Example:
 ;; 3 people: alice, bob, and carol
 ;; 3 clothing colors: red, blue, green
 ;; 3 locations: park, pier, and palace
 ;; 1 person is guilty; the other 2 are innocent
-;;
 ;; Question: Who killed dave?
-;;
-;; Facts: a concrete arrangement. however, there is also an approach where we don't actually bind the values,
-;; but that may make rule generation more difficult
 
-;; actually create a fully grounded set of records
-;; this might help a lot with rule generation because brute force might be very slow. when a lot is already
-;; specified, it might be hard to blindly generate the final rules.
-(defn init-grounded-records [config]
-  (let [shuffled (reduce-kv (fn [m k v] (assoc m k (shuffle v)))
-                            {}
-                            (get config :values))]
-    (apply map
-           (fn [& args] (apply hash-map (interleave (keys shuffled) args)))
-           (vals shuffled))))
-
+;; Sets up lvars based on config
 ;; :values is a map of keys to a list of lvars
 ;; :records is those lvars zipped into records
 (defn init-lvars [config]
@@ -159,13 +147,14 @@
     {:values values
      :records records}))
 
-;; take partial and hydrate it for all unspecified keys. useful for unification.
+;; Take partial map and hydrate it for all unspecified keys. useful for unification.
 (defn new-rec [config partial]
   (merge (reduce-kv (fn [m k _] (assoc m k (lvar)))
                     {}
                     (get config :values)) partial))
 
-;; only simple membero rules supported
+;; Only simple membero rules supported
+;;
 ;; TODO: add some constraints. e.g. never generate a rule that just gives away who is guilty
 (defn generate-rule [config q]
   (let [ks (keys (get config :values))
@@ -174,10 +163,18 @@
         v1 (rand-nth (get-in config [:values k1]))
         v2 (rand-nth (get-in config [:values k2]))]
     (println "DEBUG - generate-rule:" k1 "=" v1 "," k2 "=" v2)
-    (membero (new-rec config {k1 v1
-                              k2 v2}) q)))
+    {:data {:type :membero
+            :k1 k1
+            :k2 k2
+            :v1 v1
+            :v2 v2}
+     :goal (membero (new-rec config {k1 v1
+                                     k2 v2}) q)}))
 
-;; config values must always contain :name and :guilty
+;; Generates a (janky) logic puzzle!
+;; Config values must always contain :name and :guilty keys
+;; Returns a list of rules with :goal function and structured :data map
+;;
 ;; TODO: prevent redundant rules
 ;; TODO: only generate discriminating rules? ones that reduce the solution space?
 ;; TODO: stop based on a condition. e.g. "we know who is guilty"
@@ -188,31 +185,43 @@
       (let [new-rules (cons (generate-rule config hs) rules)
             res (run-with-context (fn [q]
                                     (and*
-                                     (conj new-rules
+                                     (conj (map #(:goal %) new-rules)
                                            (== hs q)
                                            (== q (get lvars :records))
                                            ;; pin order of :name to prevent redundant solutions
                                            (== (get-in config [:values :name]) (get-in lvars [:values :name]))
                                            ;; defining solution space given the config. this could be made more flexible
-                                           (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                           (everyg (fn [k] (permuteo (get-in config [:values k])
+                                                                     (get-in lvars [:values k])))
                                                    (keys (get lvars :values)))))))]
         (if (nil? (:soln res))
           (recur rules)
           (if (and (:grounded? res) (= (:soln-count res) 1))
             new-rules
             (do
-              (println "DEBUG - added rule: (count new-rules) =" (count new-rules) "(:soln-count res) =" (:soln-count res))
+              (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions")
               (recur new-rules))))))))
 
+;; Jank text generation
+(defn rules-text [rules]
+  (map (fn [r]
+         (let [data (:data r)]
+           (str (name (get data :k1)) " is " (get data :v1) " and " (name (get data :k2)) " is " (get data :v2))))
+       rules))
+
 (defn -main []
+  (println "---------- Logic Puzzle Generation ----------")
   (let [example-config {:values {:name ["alice" "bob" "carol"]
                                  :guilty [true false false]
                                  :color ["red" "blue" "green"]
-                                 :location ["park" "pier" "palace"]}}]
-    (pp/pprint (puzzle example-config)))
+                                 :location ["park" "pier" "palace"]}}
+        rules (time (puzzle example-config))]
+    (println "\nConfig:\n" example-config)
+    (println "\nRules:")
+    (doseq [[idx item] (map-indexed vector (rules-text rules))]
+      (println (str (inc idx) ".") item)))
 
-  ;; (println "---------- Zebra Puzzle - using vectors ----------")
-  ;; (pp/pprint (run-with-context zebrao-vec))
-  ;; (println "\n---------- Zebra Puzzle - using maps ----------")
-  ;; (pp/pprint (run-with-context zebrao))
-  )
+  (println "\n---------- Zebra Puzzle - using vectors ----------")
+  (pp/pprint (run-with-context zebrao-vec))
+  (println "\n---------- Zebra Puzzle - using maps ----------")
+  (pp/pprint (run-with-context zebrao)))
