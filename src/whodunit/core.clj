@@ -6,6 +6,8 @@
             [clojure.tools.macro :as macro]
             [clojure.pprint :as pp]))
 
+(def DEBUG false)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; The Zebra Puzzle. see https://en.wikipedia.org/wiki/Zebra_Puzzle
 
@@ -106,7 +108,7 @@
 
 ;; Evaluates if input is fully grounded. Returns true if input contains no core.logic symbols like `'_0`.
 ;;
-;; TODO: If built-in core.logic approach is found, replace this.
+;; TODO: built-in core.logic approach?
 (defn grounded? [x]
   (not-any? (fn [x] (and (instance? clojure.lang.Symbol x)
                          (boolean (re-matches #"_\d+" (name x)))))
@@ -114,16 +116,18 @@
 
 ;; Runs the goal returning the first solution, if it's grounded, and if there are more solutions.
 ;; Note that this function takes a lot longer than the underlying call to run*.
-;;
-;; TODO: consider optionally returning all solutions. useful for analysis. e.g. ">1 solution but A=true in all of them"
-(defn run-with-context [goal]
-  (let [res (run* [q] (goal q))
-        soln (first res)
-        is-grounded (grounded? soln)]
-    {:soln soln
-     :grounded? is-grounded
-     :has-more? (> (count res) 1)
-     :soln-count (count res)}))
+(defn run+
+  ([goal] (run+ goal false))
+  ([goal all-solns?]
+   (let [res (run* [q] (goal q))
+         soln (first res)
+         out {:soln soln
+              :grounded? (grounded? soln)
+              :has-more? (> (count res) 1)
+              :soln-count (count res)}]
+     (if all-solns?
+       (assoc out :solns res)
+       out))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Generation of logic puzzle hints
@@ -162,7 +166,7 @@
         k2 (first (shuffle (remove #{k1} ks)))
         v1 (rand-nth (get-in config [:values k1]))
         v2 (rand-nth (get-in config [:values k2]))]
-    (println "DEBUG - generate-rule:" k1 "=" v1 "," k2 "=" v2)
+    (when DEBUG (println "DEBUG - generate-rule:" k1 "=" v1 "," k2 "=" v2))
     {:data {:type :membero
             :k1 k1
             :k2 k2
@@ -183,23 +187,25 @@
         lvars (init-lvars config)]
     (loop [rules '()]
       (let [new-rules (cons (generate-rule config hs) rules)
-            res (run-with-context (fn [q]
-                                    (and*
-                                     (conj (map #(:goal %) new-rules)
-                                           (== hs q)
-                                           (== q (get lvars :records))
-                                           ;; pin order of :name to prevent redundant solutions
-                                           (== (get-in config [:values :name]) (get-in lvars [:values :name]))
-                                           ;; defining solution space given the config. this could be made more flexible
-                                           (everyg (fn [k] (permuteo (get-in config [:values k])
-                                                                     (get-in lvars [:values k])))
-                                                   (keys (get lvars :values)))))))]
+            res (run+ (fn [q]
+                        (and*
+                         (conj (map #(:goal %) new-rules)
+                               (== hs q)
+                               (== q (get lvars :records))
+                               ;; pin order of :name to prevent redundant solutions
+                               (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+                               ;; defining solution space given the config. this could be made more flexible
+                               (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                       (keys (get lvars :values)))))))]
         (if (nil? (:soln res))
           (recur rules)
           (if (and (:grounded? res) (= (:soln-count res) 1))
             new-rules
             (do
-              (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions")
+              (when DEBUG
+                (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions")
+                ;; (println "DEBUG - solns:" (:solns res))
+                )
               (recur new-rules))))))))
 
 ;; Jank text generation
@@ -222,6 +228,6 @@
       (println (str (inc idx) ".") item)))
 
   (println "\n---------- Zebra Puzzle - using vectors ----------")
-  (pp/pprint (run-with-context zebrao-vec))
+  (pp/pprint (run+ zebrao-vec))
   (println "\n---------- Zebra Puzzle - using maps ----------")
-  (pp/pprint (run-with-context zebrao)))
+  (pp/pprint (run+ zebrao)))
