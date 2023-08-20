@@ -180,15 +180,16 @@
 ;; TODO: loop until 1 fully bound solution
 ;; TODO: stop based on a condition. e.g. "we know who is guilty"
 (defn puzzle [config]
-  (let [lvars (init-lvars config)]
+  (let [hs (lvar)                            ;; so rules can be declared outside of run
+        lvars (init-lvars config)
+        new-rule (generate-rule config hs)]
     (run-with-context (fn [q]
                         (all
+                         (== hs q)
                          (== q (get lvars :records))
                          (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
                                  (keys (get lvars :values)))
-                         (generate-rule config q)
-                         ;;
-                         )))))
+                         new-rule)))))
 
 (defn -main []
   (let [example-config {:values {:name ["alice" "bob" "carol"]
@@ -201,5 +202,4 @@
   ;; (pp/pprint (run-with-context zebrao-vec))
   ;; (println "\n---------- Zebra Puzzle - using maps ----------")
   ;; (pp/pprint (run-with-context zebrao))
-  ;;
   )
