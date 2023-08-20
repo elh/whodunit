@@ -23,11 +23,12 @@
   ([goal] (run+ goal false))
   ([goal all-solns?]
    (let [res (run* [q] (goal q))
+         soln-count (count res)
          soln (first res)
          out {:soln soln
               :grounded? (grounded? soln)
-              :has-more? (> (count res) 1)
-              :soln-count (count res)}]
+              :has-more? (> soln-count 1)
+              :soln-count soln-count}]
      (if all-solns?
        (assoc out :solns res)
        out))))
@@ -85,7 +86,7 @@
 ;; No fully redundant rules are included.
 ;;
 ;; The number of possible solutions is the product of the number of unique orderings for each non :name field
-;; In the default case where all values are unique this is (n!)^m!
+;; In the default case where all values are unique this is (n!)^m. yikes
 ;;
 ;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 (defn puzzle-exhaustive [config]

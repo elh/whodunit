@@ -106,6 +106,23 @@
         (membero (new-rec {:pet "zebra"}) q))))))
 
 (println "---------- Zebra Puzzle - using vectors ----------")
-(pp/pprint (time (run+ zebrao-vec)))
+(dotimes [_ 5]
+  (time (run+ zebrao-vec)))
+;; adds one more dimension with explicit house-idx but it is pinned
+;; uses core.logic.fd
+;; 700 ms. 35x slower
+
 (println "\n---------- Zebra Puzzle - using maps ----------")
-(pp/pprint (time (run+ zebrao)))
+(dotimes [_ 5]
+  (time (run+ zebrao)))
+;; adds one more dimension with explicit house-idx but it is pinned
+;; adds creates a lot of maps and merges
+;; uses core.logic.fd
+;; 1200 ms. 60x slower
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; core.logic benchmark implementation
+;; https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic/bench.clj
+;;
+;; very simple approach that uses vector order to encoded house order. does not use core.logic.fd
+;; 20 ms
