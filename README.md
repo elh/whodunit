@@ -2,29 +2,37 @@
 
 ```plaintext
 ---------- Logic Puzzle Generation ----------
-DEBUG - generate-rule: :name = bob , :location = palace
-DEBUG - added rule: 1 rules, 36 possible solutions
-DEBUG - generate-rule: :location = palace , :name = bob
-DEBUG - added rule: 2 rules, 36 possible solutions
-DEBUG - generate-rule: :location = palace , :guilty = true
-DEBUG - added rule: 3 rules, 12 possible solutions
-DEBUG - generate-rule: :name = carol , :color = red
+DEBUG - generate-rule: type = membero, kvs = #{[:guilty false] [:name carol]}
+DEBUG - added rule: 1 rules, 72 possible solutions
+DEBUG - generate-rule: type = membero, kvs = #{[:name carol] [:color green]}
+DEBUG - added rule: 2 rules, 24 possible solutions
+DEBUG - generate-rule: type = membero, kvs = #{[:color red] [:name carol]}
+DEBUG - generate-rule: type = membero, kvs = #{[:location pier] [:color green]}
+DEBUG - added rule: 3 rules, 8 possible solutions
+DEBUG - generate-rule: type = membero, kvs = #{[:name carol] [:color green]}
+DEBUG - generate-rule: type = membero, kvs = #{[:guilty true] [:color green]}
+DEBUG - generate-rule: type = membero, kvs = #{[:location palace] [:color green]}
+DEBUG - generate-rule: type = membero, kvs = #{[:color red] [:name alice]}
 DEBUG - added rule: 4 rules, 4 possible solutions
-DEBUG - generate-rule: :color = red , :location = pier
+DEBUG - generate-rule: type = membero, kvs = #{[:color red] [:name alice]}
+DEBUG - generate-rule: type = membero, kvs = #{[:color blue] [:name carol]}
+DEBUG - generate-rule: type = membero, kvs = #{[:guilty true] [:color green]}
+DEBUG - generate-rule: type = membero, kvs = #{[:location palace] [:guilty false]}
 DEBUG - added rule: 5 rules, 2 possible solutions
-DEBUG - generate-rule: :name = alice , :color = blue
-"Elapsed time: 155.089125 msecs"
+DEBUG - generate-rule: type = membero, kvs = #{[:color blue] [:name carol]}
+DEBUG - generate-rule: type = membero, kvs = #{[:location palace] [:color blue]}
+"Elapsed time: 350.056625 msecs"
 
 Config:
  {:values {:name [alice bob carol], :guilty [true false false], :color [red blue green], :location [park pier palace]}}
 
 Rules:
-1. name is alice and color is blue
-2. color is red and location is pier
-3. name is carol and color is red
-4. location is palace and guilty is true
-5. location is palace and name is bob
-6. name is bob and location is palace
+1. guilty is false and name is carol
+2. name is carol and color is green
+3. location is pier and color is green
+4. color is red and name is alice
+5. location is palace and guilty is false
+6. location is palace and color is blue
 
 ---------- Zebra Puzzle - using vectors ----------
 {:soln

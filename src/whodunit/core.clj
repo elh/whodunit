@@ -177,16 +177,15 @@
                                      k2 v2}) q)}))
 
 ;; Generates a (janky) logic puzzle!
-;; Config values must always include a set of unique :name values.
+;; Config :values define the set of possible records key-values. unique :name values are required.
 ;; Returns a list of rules with :goal function and structured :data map
+;; No fully redundant rules are included.
 ;;
-;; TODO: prevent redundant rules
-;; TODO: only generate discriminating rules? ones that reduce the solution space?
-;; TODO: stop based on a condition. e.g. "we know who is guilty"
+;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 (defn puzzle [config]
   (let [hs (lvar)                            ;; so rules can be declared outside of run
         lvars (init-lvars config)]
-    (loop [rules []]
+    (loop [rules [] soln-count nil]
       (let [new-rules (conj rules (generate-rule config hs))
             res (run+ (fn [q]
                         (and*
@@ -198,8 +197,9 @@
                                ;; defining solution space given the config. this could be made more flexible
                                (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
                                        (keys (get lvars :values)))))))]
-        (if (nil? (:soln res))
-          (recur rules)
+        (if (or (nil? (:soln res))
+                (= soln-count (:soln-count res)))
+          (recur rules soln-count)
           (if (and (:grounded? res) (= (:soln-count res) 1))
             new-rules
             (do
@@ -207,7 +207,7 @@
                 (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions")
                 ;; (println "DEBUG - solns:" (:solns res))
                 )
-              (recur new-rules))))))))
+              (recur new-rules (:soln-count res)))))))))
 
 ;; Jank text generation
 (defn rules-text [rules]
