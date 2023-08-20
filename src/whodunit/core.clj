@@ -177,7 +177,7 @@
      :goal (membero (new-rec config {k1 v1
                                      k2 v2}) q)}))
 
-;; Generates a (janky) logic puzzle!
+;; Generates a (janky) logic puzzle! It generates a full
 ;; Config :values define the set of possible records key-values. unique :name values are required.
 ;; Returns a list of rules with :goal function and structured :data map
 ;; No fully redundant rules are included.
@@ -186,21 +186,21 @@
 ;; In the default case where all values are unique this is (n!)^m!
 ;;
 ;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
-(defn puzzle [config]
+(defn puzzle-exhaustive [config]
   (let [hs (lvar)                            ;; so rules can be declared outside of run
         lvars (init-lvars config)]
     (loop [rules [] soln-count nil]
       (let [new-rules (conj rules (generate-rule config hs))
-            res (run+ (fn [q]
-                        (and*
-                         (conj (map #(:goal %) new-rules)
-                               (== hs q)
-                               (== q (get lvars :records))
-                               ;; pin order of :name to prevent redundant solutions
-                               (== (get-in config [:values :name]) (get-in lvars [:values :name]))
-                               ;; defining solution space given the config. this could be made more flexible
-                               (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
-                                       (keys (get lvars :values)))))) DEBUG-ALL-SOLNS)]
+            res (time (run+ (fn [q]
+                              (and*
+                               (conj (map #(:goal %) new-rules)
+                                     (== hs q)
+                                     (== q (get lvars :records))
+                                     ;; pin order of :name to prevent redundant solutions
+                                     (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+                                     ;; defining solution space given the config. this could be made more flexible
+                                     (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                             (keys (get lvars :values)))))) DEBUG-ALL-SOLNS))]
         (if (or (nil? (:soln res))
                 (= soln-count (:soln-count res)))
           (recur rules soln-count)
@@ -241,7 +241,7 @@
                                  :guilty [true false false]
                                  :color ["red" "blue" "green"]
                                  :location ["park" "pier" "palace"]}}
-        rules (time (puzzle example-config))]
+        rules (time (puzzle-exhaustive example-config))]
     (println "\nConfig:\n" example-config)
     (println "\nRules:")
     (doseq [[idx item] (map-indexed vector (rules-text rules))]
@@ -250,9 +250,9 @@
 ;;     (println (time (puzzle-base-count example-config))))
 ;;
 ;;   (println "\n---------- Zebra Puzzle - using vectors ----------")
-;;   (pp/pprint (run+ zebrao-vec))
+;;   (pp/pprint (time (run+ zebrao-vec)))
 ;;   (println "\n---------- Zebra Puzzle - using maps ----------")
-;;   (pp/pprint (run+ zebrao))
+;;   (pp/pprint (time (run+ zebrao)))
   )
 
 ;; some example configs. testing complexity
