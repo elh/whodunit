@@ -6,7 +6,9 @@
             [clojure.tools.macro :as macro]
             [clojure.pprint :as pp]))
 
-;; The Zebra Puzzle. see https://en.wikipedia.org/wiki/Zebra_Puzzle
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; The Zebra Puzzle. see https://en.wikipedia.org/wiki/Zebra_Puzzle
+
 ;; result binding is a vec of [house-idx house-color nationality drinks smokes pet] vecs
 (defn zebrao-vec [q]
   (macro/symbol-macrolet
@@ -47,7 +49,7 @@
         (membero [_ _ _ "water" _ _] q)
         (membero [_ _ _ _ _ "zebra"] q))))))
 
-;; The Zebra Puzzle. see https://en.wikipedia.org/wiki/Zebra_Puzzle
+;; my preferred, more extensible map approach
 (defn zebrao [q]
   (macro/symbol-macrolet
    [_ (lvar)]
@@ -110,16 +112,94 @@
             (tree-seq coll? seq x)))
 
 ;; Runs the goal with timing and returns the first solution, if it's grounded, and if there are more solutions.
+;; TODO: optionally return all solutions. useful for analysis. e.g. ">1 solution but A=true in all of them"
 (defn run-with-context [goal]
-  (let [res (run 2 [q] (time (goal q)))
+  (let [res (run* [q] (time (goal q)))
         soln (first res)
         is-grounded (grounded? soln)]
     {:soln soln
      :grounded? is-grounded
-     :has-more? (> (count res) 1)}))
+     :has-more? (> (count res) 1)
+     :soln-count (count res)}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Generation of logic puzzle hints
+;; Example
+;; 3 people: alice, bob, and carol
+;; 3 clothing colors: red, blue, green
+;; 3 locations: park, pier, and palace
+;; 1 person is guilty; the other 2 are innocent
+;;
+;; Question: Who killed dave?
+;;
+;; Facts: a concrete arrangement. however, there is also an approach where we don't actually bind the values,
+;; but that may make rule generation more difficult
+
+;; actually create a fully grounded set of records
+;; this might help a lot with rule generation because brute force might be very slow. when a lot is already
+;; specified, it might be hard to blindly generate the final rules.
+(defn init-grounded-records [config]
+  (let [shuffled (reduce-kv (fn [m k v] (assoc m k (shuffle v)))
+                            {}
+                            (get config :values))]
+    (apply map
+           (fn [& args] (apply hash-map (interleave (keys shuffled) args)))
+           (vals shuffled))))
+
+;; :values is a map of keys to a list of lvars
+;; :records is those lvars zipped into records
+(defn init-lvars [config]
+  (let [values (reduce-kv (fn [m k v] (assoc m k (repeatedly (count v) lvar)))
+                          {}
+                          (get config :values))
+        records (apply map
+                       (fn [& args] (apply hash-map (interleave (keys values) args)))
+                       (vals values))]
+    {:values values
+     :records records}))
+
+;; take partial and hydrate it for all unspecified keys. useful for unification.
+(defn new-rec [config partial]
+  (merge (reduce-kv (fn [m k _] (assoc m k (lvar)))
+                    {}
+                    (get config :values)) partial))
+
+;; only simple membero rules supported
+;; TODO: add some constraints. e.g. never generate a rule that just gives away who is guilty
+(defn generate-rule [config q]
+  (let [ks (keys (get config :values))
+        k1 (rand-nth ks)
+        k2 (first (shuffle (remove #{k1} ks)))
+        v1 (rand-nth (get-in config [:values k1]))
+        v2 (rand-nth (get-in config [:values k2]))]
+    (println "DEBUG:" k1 "=" v1 "," k2 "=" v2)
+    (membero (new-rec config {k1 v1
+                              k2 v2}) q)))
+
+;; config values must always contain :name and :guilty
+;; TODO: loop until 1 fully bound solution
+;; TODO: stop based on a condition. e.g. "we know who is guilty"
+(defn puzzle [config]
+  (let [lvars (init-lvars config)]
+    (run-with-context (fn [q]
+                        (all
+                         (== q (get lvars :records))
+                         (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                 (keys (get lvars :values)))
+                         (generate-rule config q)
+                         ;;
+                         )))))
 
 (defn -main []
-  (println "---------- Zebra Puzzle - using vectors ----------")
-  (pp/pprint (run-with-context zebrao-vec))
-  (println "\n---------- Zebra Puzzle - using maps ----------")
-  (pp/pprint (run-with-context zebrao)))
+  (let [example-config {:values {:name ["alice" "bob" "carol"]
+                                 :guilty [true false false]
+                                 :color ["red" "blue" "green"]
+                                 :location ["park" "pier" "palace"]}}]
+    (pp/pprint (puzzle example-config)))
+
+  ;; (println "---------- Zebra Puzzle - using vectors ----------")
+  ;; (pp/pprint (run-with-context zebrao-vec))
+  ;; (println "\n---------- Zebra Puzzle - using maps ----------")
+  ;; (pp/pprint (run-with-context zebrao))
+  ;;
+  )
