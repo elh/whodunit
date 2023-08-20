@@ -130,7 +130,9 @@
        out))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; Generation of logic puzzle hints
+;;;; Logic Puzzle Generation
+;; The solution space is defined as a set of records identified by a unique :name values.
+;;
 ;; Example:
 ;; 3 people: alice, bob, and carol
 ;; 3 clothing colors: red, blue, green
@@ -159,24 +161,23 @@
 
 ;; Only simple membero rules supported
 ;;
-;; TODO: add some constraints. e.g. never generate a rule that just gives away who is guilty
+;; TODO: add some user-defined constraints. e.g. never generate a rule that just gives away who is guilty
 (defn generate-rule [config q]
   (let [ks (keys (get config :values))
         k1 (rand-nth ks)
         k2 (first (shuffle (remove #{k1} ks)))
         v1 (rand-nth (get-in config [:values k1]))
-        v2 (rand-nth (get-in config [:values k2]))]
-    (when DEBUG (println "DEBUG - generate-rule:" k1 "=" v1 "," k2 "=" v2))
+        v2 (rand-nth (get-in config [:values k2]))
+        kvs #{[k1 v1]
+             [k2 v2]}]
+    (when DEBUG (println "DEBUG - generate-rule: type = membero, kvs =" kvs))
     {:data {:type :membero
-            :k1 k1
-            :k2 k2
-            :v1 v1
-            :v2 v2}
+            :kvs kvs}
      :goal (membero (new-rec config {k1 v1
                                      k2 v2}) q)}))
 
 ;; Generates a (janky) logic puzzle!
-;; Config values must always contain :name and :guilty keys
+;; Config values must always include a set of unique :name values.
 ;; Returns a list of rules with :goal function and structured :data map
 ;;
 ;; TODO: prevent redundant rules
@@ -185,8 +186,8 @@
 (defn puzzle [config]
   (let [hs (lvar)                            ;; so rules can be declared outside of run
         lvars (init-lvars config)]
-    (loop [rules '()]
-      (let [new-rules (cons (generate-rule config hs) rules)
+    (loop [rules []]
+      (let [new-rules (conj rules (generate-rule config hs))
             res (run+ (fn [q]
                         (and*
                          (conj (map #(:goal %) new-rules)
@@ -211,8 +212,9 @@
 ;; Jank text generation
 (defn rules-text [rules]
   (map (fn [r]
-         (let [data (:data r)]
-           (str (name (get data :k1)) " is " (get data :v1) " and " (name (get data :k2)) " is " (get data :v2))))
+         (let [kvs (:kvs (:data r))]
+           (str (name (ffirst kvs)) " is " (second (first kvs)) " and "
+                (name (first (second kvs))) " is " (second (second kvs)))))
        rules))
 
 (defn -main []
