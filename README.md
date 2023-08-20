@@ -1,6 +1,8 @@
 # whodunit
 
+Generating Logic Puzzles
 ```plaintext
+> make run
 ---------- Logic Puzzle Generation ----------
 DEBUG - generate-rule: type = membero, kvs = #{[:guilty false] [:name carol]}
 DEBUG - added rule: 1 rules, 72 possible solutions
@@ -33,8 +35,17 @@ Rules:
 4. color is red and name is alice
 5. location is palace and guilty is false
 6. location is palace and color is blue
+```
 
+The Zebra Puzzle
+```plaintext
+> make zebra
 ---------- Zebra Puzzle - using vectors ----------
+"Elapsed time: 27.248042 msecs"
+"Elapsed time: 15.686916 msecs"
+"Elapsed time: 14.313708 msecs"
+"Elapsed time: 13.928584 msecs"
+"Elapsed time: 13.858833 msecs"
 {:soln
  ((1 "yellow" "norwegian" "water" "kools" "fox")
   (2 "blue" "ukrainian" "tea" "chesterfields" "horse")
@@ -46,6 +57,11 @@ Rules:
  :soln-count 1}
 
 ---------- Zebra Puzzle - using maps ----------
+"Elapsed time: 28.097333 msecs"
+"Elapsed time: 23.879833 msecs"
+"Elapsed time: 26.963625 msecs"
+"Elapsed time: 22.967208 msecs"
+"Elapsed time: 22.87375 msecs"
 {:soln
  ({:house-idx 1,
    :house-color "yellow",

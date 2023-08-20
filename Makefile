@@ -10,3 +10,7 @@ test:
 .PHONY: lint
 lint:
 	@clj -M:lint
+
+.PHONY: zebra
+zebra:
+	@lein exec -p src/whodunit/zebra.clj

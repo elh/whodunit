@@ -9,6 +9,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; The Zebra Puzzle. see https://en.wikipedia.org/wiki/Zebra_Puzzle
+;;
+;; holding house order constant, there are five house attributes and five houses -> (5!)^5 or 24.9B possibilities
 
 ;; Result binding is a vec of [house-idx house-color nationality drinks smokes pet] vecs
 (defn zebrao-vec [q]
@@ -31,21 +33,21 @@
                                          (repeatedly 5 #(repeatedly 5 lvar))))]
        (all
         (== answers q)
-        (== [_ _ _ _ _] q)
+        ;; this ordering from core.logic benchmark v. original problem statement improves latency from 650ms to 13ms!!!
+        (membero [3 _ _ "milk" _ _] q)
+        (membero [1 _ "norwegian" _ _ _] q)
+        (house-ordero nexto [_ _ "norwegian" _ _ _] [_ "blue" _ _ _ _] q)
+        (house-ordero righto [_ "ivory" _ _ _ _] [_ "green" _ _ _ _] q)
         (membero [_ "red" "englishman" _ _ _] q)
+        (membero [_ "yellow" _ _ "kools" _] q)
         (membero [_ _ "spaniard" _ _ "dog"] q)
         (membero [_ "green" _ "coffee" _ _] q)
         (membero [_ _ "ukrainian" "tea" _ _] q)
-        (house-ordero righto [_ "ivory" _ _ _ _] [_ "green" _ _ _ _] q)
-        (membero [_ _ _ _ "old-gold" "snail"] q)
-        (membero [_ "yellow" _ _ "kools" _] q)
-        (membero [3 _ _ "milk" _ _] q)
-        (membero [1 _ "norwegian" _ _ _] q)
-        (house-ordero nexto [_ _ _ _ "chesterfields" _] [_ _ _ _ _ "fox"] q)
-        (house-ordero nexto [_ _ _ _ "kools" _] [_ _ _ _ _ "horse"] q)
         (membero [_ _ _ "orange-juice" "lucky-strike" _] q)
         (membero [_ _ "japanese" _ "parliaments" _] q)
-        (house-ordero nexto [_ _ "norwegian" _ _ _] [_ "blue" _ _ _ _] q)
+        (membero [_ _ _ _ "old-gold" "snail"] q)
+        (house-ordero nexto [_ _ _ _ "kools" _] [_ _ _ _ _ "horse"] q)
+        (house-ordero nexto [_ _ _ _ "chesterfields" _] [_ _ _ _ _ "fox"] q)
         ;; implied by the questions
         (membero [_ _ _ "water" _ _] q)
         (membero [_ _ _ _ _ "zebra"] q))))))
@@ -77,52 +79,66 @@
      (let [answers (map #(new-rec {:house-idx %}) (range 1 6))]
        (all
         (== answers q)
+        ;; this ordering from core.logic benchmark v. original problem statement improves latency from 1200ms to 23ms!!!
+        (membero (new-rec {:house-idx 3
+                           :drinks "milk"}) q)
+        (membero (new-rec {:house-idx 1
+                           :nationality "norwegian"}) q)
+        (ordero nexto :house-idx (new-rec {:nationality "norwegian"}) (new-rec {:house-color "blue"}) q)
+        (ordero righto :house-idx (new-rec {:house-color "ivory"}) (new-rec {:house-color "green"}) q)
         (membero (new-rec {:house-color "red"
                            :nationality "englishman"}) q)
+        (membero (new-rec {:house-color "yellow"
+                           :smokes "kools"}) q)
         (membero (new-rec {:nationality "spaniard"
                            :pet "dog"}) q)
         (membero (new-rec {:house-color "green"
                            :drinks "coffee"}) q)
         (membero (new-rec {:nationality "ukrainian"
                            :drinks "tea"}) q)
-        (ordero righto :house-idx (new-rec {:house-color "ivory"}) (new-rec {:house-color "green"}) q)
-        (membero (new-rec {:smokes "old-gold"
-                           :pet "snail"}) q)
-        (membero (new-rec {:house-color "yellow"
-                           :smokes "kools"}) q)
-        (membero (new-rec {:house-idx 3
-                           :drinks "milk"}) q)
-        (membero (new-rec {:house-idx 1
-                           :nationality "norwegian"}) q)
-        (ordero nexto :house-idx (new-rec {:smokes "chesterfields"}) (new-rec {:pet "fox"}) q)
-        (ordero nexto :house-idx (new-rec {:smokes "kools"}) (new-rec {:pet "horse"}) q)
         (membero (new-rec {:drinks "orange-juice"
                            :smokes "lucky-strike"}) q)
         (membero (new-rec {:nationality "japanese"
                            :smokes "parliaments"}) q)
-        (ordero nexto :house-idx (new-rec {:nationality "norwegian"}) (new-rec {:house-color "blue"}) q)
+        (membero (new-rec {:smokes "old-gold"
+                           :pet "snail"}) q)
+        (ordero nexto :house-idx (new-rec {:smokes "kools"}) (new-rec {:pet "horse"}) q)
+        (ordero nexto :house-idx (new-rec {:smokes "chesterfields"}) (new-rec {:pet "fox"}) q)
         ;; implied by the questions
         (membero (new-rec {:drinks "water"}) q)
         (membero (new-rec {:pet "zebra"}) q))))))
 
 (println "---------- Zebra Puzzle - using vectors ----------")
-(dotimes [_ 5]
+(dotimes [_ 4]
   (time (run+ zebrao-vec)))
+(pp/pprint (time (run+ zebrao-vec)))
+;; 13 ms.
+;;
+;; Context:
 ;; adds one more dimension with explicit house-idx but it is pinned
 ;; uses core.logic.fd
-;; 700 ms. 35x slower
+;; 650 ms. 50x slower
+;;
+;; reordering to match core.logic benchmark brings it down to 13 ms!!! parity with core.logic benchmark
+;; removing fd lowers it to 400 ms
 
 (println "\n---------- Zebra Puzzle - using maps ----------")
-(dotimes [_ 5]
+(dotimes [_ 4]
   (time (run+ zebrao)))
+(pp/pprint (time (run+ zebrao)))
+;; 23 ms
+;;
+;; Context:
 ;; adds one more dimension with explicit house-idx but it is pinned
 ;; adds creates a lot of maps and merges
 ;; uses core.logic.fd
-;; 1200 ms. 60x slower
+;; 1200 ms. 92x slower
+;;
+;; reordering to match core.logic benchmark brings it down to 23 ms!!! 80% slower than core.logic benchmark
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; core.logic benchmark implementation
 ;; https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic/bench.clj
 ;;
 ;; very simple approach that uses vector order to encoded house order. does not use core.logic.fd
-;; 20 ms
+;; 13 ms

@@ -2,8 +2,6 @@
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [clojure.core.logic :refer :all]
-            [clojure.core.logic.fd :as fd]
-            [clojure.tools.macro :as macro]
             [clojure.pprint :as pp]))
 
 (def DEBUG false)
@@ -80,13 +78,13 @@
      :goal (membero (new-rec config {k1 v1
                                      k2 v2}) q)}))
 
-;; Generates a (janky) logic puzzle! It generates a full
-;; Config :values define the set of possible records key-values. unique :name values are required.
-;; Returns a list of rules with :goal function and structured :data map
-;; No fully redundant rules are included.
+;; Generates a (janky) logic puzzle! It generates a full set of rules up front using techniques that are not suitable to
+;; large solution spaces. The number of possible solutions is the product of the number of unique orderings for each
+;; non :name field. In the default case where all values are unique this is (n!)^m. yikes!
 ;;
-;; The number of possible solutions is the product of the number of unique orderings for each non :name field
-;; In the default case where all values are unique this is (n!)^m. yikes
+;; Config :values define the set of possible records key-values. unique :name values are required.
+;; Returns a list of rules with a :goal function and structured :data map
+;; No rules are added that do not add new information to the solution space.
 ;;
 ;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 (defn puzzle-exhaustive [config]
