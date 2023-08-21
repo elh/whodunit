@@ -5,7 +5,6 @@
             [clojure.pprint :as pp]))
 
 (def DEBUG false)
-(def DEBUG-ALL-SOLNS false)
 
 ;; Evaluates if input is fully grounded. Returns true if input contains no core.logic symbols like `'_0`.
 ;;
@@ -16,19 +15,20 @@
             (tree-seq coll? seq x)))
 
 ;; Runs the goal returning the first solution, if it's grounded, and if there are more solutions.
-;; Note that this function takes a lot longer than the underlying call to run*.
+;; If :soln-count? option is true, we will find all results and return the total result count.
 (defn run+
-  ([goal] (run+ goal false))
-  ([goal all-solns?]
-   (let [res (run* [q] (goal q))
+  ([goal] (run+ goal {}))
+  ([goal opts]
+   (let [res (if (:soln-count? opts)
+               (run* [q] (goal q))
+               (run 2 [q] (goal q)))
          soln-count (count res)
          soln (first res)
          out {:soln soln
               :grounded? (grounded? soln)
-              :has-more? (> soln-count 1)
-              :soln-count soln-count}]
-     (if all-solns?
-       (assoc out :solns res)
+              :has-more? (> soln-count 1)}]
+     (if (:soln-count? opts)
+       (assoc out :soln-count soln-count)
        out))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -101,7 +101,7 @@
                                      (== (get-in config [:values :name]) (get-in lvars [:values :name]))
                                      ;; defining solution space given the config. this could be made more flexible
                                      (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
-                                             (keys (get lvars :values)))))) DEBUG-ALL-SOLNS))]
+                                             (keys (get lvars :values)))))) {:soln-count? true}))]
         (if (or (nil? (:soln res))
                 (= soln-count (:soln-count res)))
           (recur rules soln-count)
@@ -109,10 +109,7 @@
             new-rules
             (do
               (when DEBUG
-                (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions")
-                (when DEBUG-ALL-SOLNS
-                  (println "DEBUG - solns:")
-                  (pp/pprint (:solns res))))
+                (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions"))
               (recur new-rules (:soln-count res)))))))))
 
 (defn puzzle-base-count [config]
@@ -125,7 +122,7 @@
                       (== (get-in config [:values :name]) (get-in lvars [:values :name]))
                       ;; defining solution space given the config. this could be made more flexible
                       (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
-                              (keys (get lvars :values)))))) DEBUG-ALL-SOLNS)]
+                              (keys (get lvars :values)))))) {:soln-count? true})]
     (:soln-count res)))
 
 ;; Jank text generation

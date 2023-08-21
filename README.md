@@ -53,8 +53,7 @@ The Zebra Puzzle
   (4 "ivory" "spaniard" "orange-juice" "lucky-strike" "dog")
   (5 "green" "japanese" "coffee" "parliaments" "zebra")),
  :grounded? true,
- :has-more? false,
- :soln-count 1}
+ :has-more? false}
 
 ---------- Zebra Puzzle - using maps ----------
 "Elapsed time: 28.097333 msecs"
@@ -94,6 +93,5 @@ The Zebra Puzzle
    :smokes "parliaments",
    :pet "zebra"}),
  :grounded? true,
- :has-more? false,
- :soln-count 1}
+ :has-more? false}
 ```
