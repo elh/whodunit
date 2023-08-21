@@ -1,4 +1,4 @@
-(ns script.generate
+(ns script.generate-exhaustive
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]))
@@ -27,7 +27,7 @@
                     (Integer/parseInt (second *command-line-args*))
                     3)
       config (get configs config-size)
-      rules (time (puzzle config))]
+      rules (time (puzzle-exhaustive config))]
   (println "\nConfig:\n" config)
   (println "\nRules:")
   (doseq [[idx item] (map-indexed vector (rules-text rules))]

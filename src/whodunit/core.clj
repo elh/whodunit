@@ -112,7 +112,45 @@
                 (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions"))
               (recur new-rules (:soln-count res)))))))))
 
-(defn puzzle-base-count [config]
+;; Newer approach
+;;
+;; Generate new rules until we have a fully grounded solution. This does not exhaustively generate possible solutions
+;; from run+ making individual iterations faster; however, that means we cannot avoid adding rules that do not reduce
+;; the solution space. Some runs are still very slow even when only asking for 2 results and I think that is in the
+;; case there are no results but it is hard to verify...
+;;
+;; Still not improve it much. The best way to generate the rule set would be to have a specific real expected solution
+;; and derive rules against that. Originally, I didn't want to give up the flexibility of not being able to change
+;; things as I went. This is because I actually expect to use this in an iterative way.
+(defn puzzle [config]
+  (let [hs (lvar)                            ;; so rules can be declared outside of run
+        lvars (init-lvars config)]
+    (loop [rules []]
+      (let [new-rule (generate-rule config hs)]
+        ;; prevent identical duplicate rules
+        (if (contains? (set (map #(:data %) rules)) (:data new-rule))
+          (recur rules)
+          (let [new-rules (conj rules new-rule)
+                res (time (run+ (fn [q]
+                                  (and*
+                                   (conj (map #(:goal %) new-rules)
+                                         (== hs q)
+                                         (== q (get lvars :records))
+                                         ;; pin order of :name to prevent redundant solutions
+                                         (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+                                         ;; defining solution space given the config. this could be made more flexible
+                                         (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                                 (keys (get lvars :values))))))))]
+            (if (nil? (:soln res))
+              (recur rules)
+              (if (and (:grounded? res) (not (:has-more? res)))
+                new-rules
+                (do
+                  (when DEBUG
+                    (println "DEBUG - added rule:" (count new-rules) "rules"))
+                  (recur new-rules))))))))))
+
+(defn count-solutions [config]
   (let [lvars (init-lvars config)
         res (run+ (fn [q]
                     (and*
