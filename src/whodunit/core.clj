@@ -69,13 +69,23 @@
         k2 (first (shuffle (remove #{k1} ks)))
         v1 (rand-nth (get-in config [:values k1]))
         v2 (rand-nth (get-in config [:values k2]))
-        kvs #{[k1 v1]
-              [k2 v2]}]
+        kvs {k1 v1
+             k2 v2}]
     (when DEBUG (println "DEBUG - generate-rule: type = membero, kvs =" kvs))
     {:data {:type :membero
             :kvs kvs}
-     :goal (membero (new-rec config {k1 v1
-                                     k2 v2}) q)}))
+     :goal (membero (new-rec config kvs) q)}))
+
+(defn generate-rule-from-soln [soln config q]
+  (let [record (rand-nth soln)
+        ks (keys record)
+        k1 (rand-nth ks)
+        k2 (first (shuffle (remove #{k1} ks)))
+        kvs (select-keys record [k1 k2])]
+    (when DEBUG (println "DEBUG - generate-rule: type = membero, kvs =" kvs))
+    {:data {:type :membero
+            :kvs kvs}
+     :goal (membero (new-rec config kvs) q)}))
 
 ;; Generates a (janky) logic puzzle! It generates a full set of rules up front using techniques that are not suitable to
 ;; large solution spaces. The number of possible solutions is the product of the number of unique orderings for each
@@ -141,6 +151,8 @@
                                          ;; defining solution space given the config. this could be made more flexible
                                          (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
                                                  (keys (get lvars :values))))))))]
+            (when DEBUG
+              (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
             (if (nil? (:soln res))
               (recur rules)
               (if (and (:grounded? res) (not (:has-more? res)))
@@ -149,6 +161,57 @@
                   (when DEBUG
                     (println "DEBUG - added rule:" (count new-rules) "rules"))
                   (recur new-rules))))))))))
+
+;; A faster approach. Instead of generating a random rule and hoping it conforms to the solution space, instead use a
+;; known good solution and build the rule from that. This trades off the flexibility of being able to change the
+;; solution space as you go though.
+;;
+;; Next challenge will be avoiding creating redundant rules when dealing with large solution spaces and last rules.
+;;
+;; TODO: shuffle config on each iteration so real solution isnt actually set.
+;; that seems to slow generation a lot though... just shuffling once at the top
+(defn puzzle-fast [config]
+  (let [hs (lvar)                             ;; so rules can be declared outside of run
+        lvars (init-lvars config)
+        ;; shuffled once up front
+        config (assoc config :values (reduce-kv (fn [m k v] (assoc m k (shuffle v)))
+                                                {}
+                                                (get config :values)))]
+    (loop [rules []
+           last-soln nil]                     ;; last candidate solution from last run+
+      (let [new-rule (if (nil? last-soln)
+                       (generate-rule config hs)
+                       (generate-rule-from-soln last-soln config hs))]
+        ;; prevent identical duplicate rules
+        (if (contains? (set (map #(:data %) rules)) (:data new-rule))
+          (do
+            (when DEBUG
+              (println "DEBUG - duplicate rule"))
+            (recur rules last-soln))
+          (let [new-rules (conj rules new-rule)
+                res (time (run+ (fn [q]
+                                  (and*
+                                   (conj (map #(:goal %) new-rules)
+                                         (== hs q)
+                                         (== q (get lvars :records))
+                                         ;; pin order of :name to prevent redundant solutions. do not use shuffled!
+                                         (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+                                         ;; defining solution space given the config. this could be made more flexible
+                                         (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                                 (keys (get lvars :values))))))))]
+            (when DEBUG
+              (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
+            (if (nil? (:soln res))
+              (recur rules last-soln)
+              (if (and (:grounded? res) (not (:has-more? res)))
+                (do
+                  (when DEBUG
+                    (println "DEBUG - done: soln =" (:soln res)))
+                  new-rules)
+                (do
+                  (when DEBUG
+                    (println "DEBUG - added rule:" (count new-rules) "rules"))
+                  (recur new-rules (:soln res)))))))))))
 
 (defn count-solutions [config]
   (let [lvars (init-lvars config)
