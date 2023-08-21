@@ -1,7 +1,3 @@
-.PHONY: run
-run:
-	@lein run
-
 .PHONY: test
 test:
 	@lein test
@@ -11,6 +7,10 @@ test:
 lint:
 	@clj -M:lint
 
+.PHONY: generate run
+generate run:
+	@lein exec -p script/generate.clj
+
 .PHONY: zebra
 zebra:
-	@lein exec -p src/whodunit/zebra.clj
+	@lein exec -p script/zebra.clj

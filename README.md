@@ -2,7 +2,7 @@
 
 Generating Logic Puzzles
 ```plaintext
-> make run
+> make generate
 ---------- Logic Puzzle Generation ----------
 DEBUG - generate-rule: type = membero, kvs = #{[:guilty false] [:name carol]}
 DEBUG - added rule: 1 rules, 72 possible solutions

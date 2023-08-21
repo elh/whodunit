@@ -25,3 +25,17 @@
       (is (= true (grounded? (first (l/run 1 [q] (l/== q 'foo)))))))
     (testing "fresh"
       (is (= false (grounded? (first (l/run 1 [q]))))))))
+
+(deftest run+-test
+  (is (= (run+ (fn [q] (l/== q 1)))
+         {:soln 1,
+          :grounded? true,
+          :has-more? false}))
+  (is (= (run+ (fn [q] (l/permuteo q [1 2 3])))
+         {:soln [1 2 3],
+          :grounded? true,
+          :has-more? true}))
+  (is (= (run+ (fn [q] l/succeed))
+         {:soln '_0,
+          :grounded? false,
+          :has-more? false})))
