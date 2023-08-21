@@ -83,7 +83,8 @@
 ;;
 ;; Config :values define the set of possible records key-values. unique :name values are required.
 ;; Returns a list of rules with a :goal function and structured :data map
-;; No rules are added that do not add new information to the solution space.
+;; No rules are added that do not add new information to the solution space. This sets a decent ceiling on the number of
+;; rules required.
 ;;
 ;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 (defn puzzle-exhaustive [config]
