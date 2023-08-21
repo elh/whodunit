@@ -74,6 +74,7 @@
     (when DEBUG (println "DEBUG - generate-rule: type = membero, kvs =" kvs))
     {:data {:type :membero
             :kvs kvs}
+     :code (format "(membero (new-rec config {%s \"%s\" %s \"%s\"}) q)", k1, v1, k2, v2)
      :goal (membero (new-rec config kvs) q)}))
 
 (defn generate-rule-from-soln [soln config q]
@@ -85,6 +86,7 @@
     (when DEBUG (println "DEBUG - generate-rule: type = membero, kvs =" kvs))
     {:data {:type :membero
             :kvs kvs}
+     :code (format "(membero (new-rec config {%s \"%s\" %s \"%s\"}) q)", k1, (get record k1), k2, (get record k2))
      :goal (membero (new-rec config kvs) q)}))
 
 ;; Generates a (janky) logic puzzle! It generates a full set of rules up front using techniques that are not suitable to
@@ -167,9 +169,15 @@
 ;; solution space as you go though.
 ;;
 ;; Next challenge will be avoiding creating redundant rules when dealing with large solution spaces and last rules.
+;; The biggest issue seems to be the final run+ that will prove there is exactly one ground solution. this effectively
+;; triggers a full scan.
+;; We seem to also suffer in large solution spaces since we are running an arbitrary order of goals that is likely not
+;; optimally ordered. When pre-processing some goals, we could try to derive that emperically but that does not help
+;; us with 0-to-1 latency here.
 ;;
 ;; TODO: shuffle config on each iteration so real solution isnt actually set.
 ;; that seems to slow generation a lot though... just shuffling once at the top
+;; TODO: order rules to keep connected components together and make filtering more effective
 (defn puzzle-fast [config]
   (let [hs (lvar)                             ;; so rules can be declared outside of run
         lvars (init-lvars config)
@@ -210,7 +218,8 @@
                   new-rules)
                 (do
                   (when DEBUG
-                    (println "DEBUG - added rule:" (count new-rules) "rules"))
+                    (println "DEBUG - added rule:" (count new-rules) "rules")
+                    (println "DEBUG - rule code:"(:code new-rule)))
                   (recur new-rules (:soln res)))))))))))
 
 (defn count-solutions [config]

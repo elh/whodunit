@@ -3,6 +3,8 @@
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]))
 
+;; important to consider if config can even be solved with currently supported rules. e.g. duplicate values make membero
+;; relations far less effective.
 (def configs {2 {:values {:name ["alice" "bob"]
                           :guilty [true false]
                           :color ["red" "blue"]
@@ -15,11 +17,11 @@
                           :guilty [true false false false]
                           :color ["red" "blue" "green" "white"]
                           :location ["park" "pier" "palace" "plaza"]}}
-              ;; note: 2 reds. 2 parks, 2 piers
               5 {:values {:name ["alice" "bob" "carol" "dave" "eve"]
                           :guilty [true false false false false]
-                          :color ["red" "red" "green" "yellow" "blue"]
-                          :location ["park" "park" "pier" "pier" "palace"]}}})
+                          :color ["red" "green" "blue" "yellow" "white"]
+                          :location ["park" "pier" "palace" "plaza" "parlor"]
+                          :item ["comb" "cowl" "coin" "cap" "crowbar"]}}})
 
 (println "---------- Logic Puzzle Generation ----------")
 (println "Generating...")
