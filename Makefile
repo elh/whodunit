@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	@lein test
+	@lein kaocha
 
 # not using lein because there were issues issues with lein-clj-kondo plugin
 .PHONY: lint
