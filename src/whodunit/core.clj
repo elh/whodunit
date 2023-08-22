@@ -117,11 +117,11 @@
         (if (or (nil? (:soln res))
                 (= soln-count (:soln-count res)))
           (recur rules soln-count)
-          (if (and (:grounded? res) (= (:soln-count res) 1))
-            new-rules
-            (do
-              (when DEBUG
-                (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions"))
+          (do
+            (when DEBUG
+              (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions"))
+            (if (and (:grounded? res) (= (:soln-count res) 1))
+              new-rules
               (recur new-rules (:soln-count res)))))))))
 
 ;; Newer approach
@@ -157,11 +157,11 @@
               (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
             (if (nil? (:soln res))
               (recur rules)
-              (if (and (:grounded? res) (not (:has-more? res)))
-                new-rules
-                (do
-                  (when DEBUG
-                    (println "DEBUG - added rule:" (count new-rules) "rules"))
+              (do
+                (when DEBUG
+                  (println "DEBUG - added rule:" (count new-rules) "rules"))
+                (if (and (:grounded? res) (not (:has-more? res)))
+                  new-rules
                   (recur new-rules))))))))))
 
 ;; A faster approach. Instead of generating a random rule and hoping it conforms to the solution space, instead use a
@@ -177,7 +177,6 @@
 ;;
 ;; TODO: shuffle config on each iteration so real solution isnt actually set.
 ;; that seems to slow generation a lot though... just shuffling once at the top
-;; TODO: order rules to keep connected components together and make filtering more effective
 (defn puzzle-fast [config]
   (let [hs (lvar)                             ;; so rules can be declared outside of run
         lvars (init-lvars config)
@@ -211,16 +210,74 @@
               (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
             (if (nil? (:soln res))
               (recur rules last-soln)
-              (if (and (:grounded? res) (not (:has-more? res)))
-                (do
-                  (when DEBUG
-                    (println "DEBUG - done: soln =" (:soln res)))
-                  new-rules)
-                (do
-                  (when DEBUG
-                    (println "DEBUG - added rule:" (count new-rules) "rules")
-                    (println "DEBUG - rule code:"(:code new-rule)))
+              (do
+                (when DEBUG
+                  (println "DEBUG - added rule:" (count new-rules) "rules")
+                  (println "DEBUG - rule code:" (:code new-rule)))
+                (if (and (:grounded? res) (not (:has-more? res)))
+                  (do
+                    (when DEBUG
+                      (println "DEBUG - done: soln =" (:soln res)))
+                    new-rules)
                   (recur new-rules (:soln res)))))))))))
+
+;; Fixed a big error in past implementations. We need to make sure the order of rules are passed in correctly to run+.
+;; It is important to have the permuteo rule early in the list of goals to constrain the search.
+;; Supports taking in rules as an argument which can be useful for benchmarking.
+(defn puzzle-fast-fixed-order
+  ([config] (puzzle-fast-fixed-order config (lvar) []))
+  ;; hs is an lvar defined outside of run so we can inject rules
+  ([config hs rules]
+   (let [lvars (init-lvars config)
+         ;; shuffled once up front
+         config (assoc config :values (reduce-kv (fn [m k v] (assoc m k (shuffle v)))
+                                                 {}
+                                                 (get config :values)))]
+     (loop [rules (vec rules)                  ;; rules as vector. we need conj to the end because goal order matters
+            last-soln nil]                     ;; last candidate solution from last run+
+       ;; don't add a new rule on first iteration. we want to terminate if initial rules are already complete
+       (let [new-rule (if (nil? last-soln)
+                        nil
+                        (if (nil? last-soln)
+                          (generate-rule config hs)
+                          (generate-rule-from-soln last-soln config hs)))]
+         ;; prevent identical duplicate rules
+         (if (and (some? new-rule) (contains? (set (map #(:data %) rules)) (:data new-rule)))
+           (do
+             (when DEBUG
+               (println "DEBUG - duplicate rule"))
+             (recur rules last-soln))
+           (let [new-rules (if (some? new-rule) (conj rules new-rule) rules)
+                 res (time (run+ (fn [q]
+                                   (and*
+                                    ;; OMG huge perf improvement here with the fixed ordering of goals. sloppy
+                                    ;; order of conj on lists. it is important that the permuto rule is early
+                                    (into [] (concat
+                                              [(== hs q)
+                                               (== q (get lvars :records))
+                                               ;; pin order of :name to prevent redundant solutions. do not use shuffled!
+                                               (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+                                               ;; defining solution space given the config. this could be made more flexible
+                                               (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                                       (keys (get lvars :values)))]
+                                              (mapv #(:goal %) new-rules)))))))]
+             (when DEBUG
+               (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
+             (if (nil? (:soln res))
+               (if (some? new-rule)
+                 (recur rules last-soln)
+                 ;; starting rules were bad
+                 (throw (Exception. "Initial rules provided to puzzle-fast have no valid solution")))
+               (do
+                 (when (and DEBUG (some? new-rule))
+                   (println "DEBUG - added rule:" (count new-rules) "rules")
+                   (println "DEBUG - rule code:" (:code new-rule)))
+                 (if (and (:grounded? res) (not (:has-more? res)))
+                   (do
+                     (when DEBUG
+                       (println "DEBUG - done: soln =" (:soln res)))
+                     new-rules)
+                   (recur new-rules (:soln res))))))))))))
 
 (defn count-solutions [config]
   (let [lvars (init-lvars config)

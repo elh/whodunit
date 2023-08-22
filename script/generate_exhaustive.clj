@@ -18,8 +18,8 @@
                           :color ["red" "blue" "green" "white"]
                           :location ["park" "pier" "palace" "plaza"]}}
               5 {:values {:name ["alice" "bob" "carol" "dave" "eve"]
-                          :guilty [true false false false false]
-                          :color ["red" "green" "blue" "yellow" "white"]
+                          ;; :guilty [true false false false false]
+                          ;; :color ["red" "green" "blue" "yellow" "white"]
                           :location ["park" "pier" "palace" "plaza" "parlor"]
                           :item ["comb" "cowl" "coin" "cap" "crowbar"]}}})
 

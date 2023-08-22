@@ -1,7 +1,13 @@
-(ns script.generate
+(ns script.generate-fast-fixed-order
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]))
+
+;; when first adding this, generating for config 4...
+;; generate_exhaustive.clj            24000 ms
+;; generate.clj                       17000 ms
+;; generate_fast.clj                   1600 ms
+;; generate_fast_fixed_order.clj        310 ms
 
 ;; important to consider if config can even be solved with currently supported rules. e.g. duplicate values make membero
 ;; relations far less effective.
@@ -29,7 +35,7 @@
                     (Integer/parseInt (second *command-line-args*))
                     3)
       config (get configs config-size)
-      rules (time (puzzle config))]
+      rules (time (puzzle-fast-fixed-order config))]
   (println "\nConfig:\n" config)
   (println "\nRules:")
   (doseq [[idx item] (map-indexed vector (rules-text rules))]
