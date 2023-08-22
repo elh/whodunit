@@ -2,15 +2,18 @@
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]
-            [script.config :as c]))
+            [script.config :as c]
+            [clojure.test :as t]))
 
 (println "---------- Logic Puzzle Generation ----------")
 (println "Generating...")
-(let [config-size (if (>= (count *command-line-args*) 2)
-                    (Integer/parseInt (second *command-line-args*))
-                    3)
-      config (get c/configs config-size)
+(let [config-key (if (>= (count *command-line-args*) 2)
+                   (second *command-line-args*)
+                   3)
+      config (get c/configs config-key)
       rules (time (puzzle-exhaustive config))]
+  (when (nil? config)
+    (throw (Exception. (str "No config found for key: " config-key))))
   (println "\nConfig:\n" config)
   (println "\nRules:")
   (doseq [[idx item] (map-indexed vector (rules-text rules))]
