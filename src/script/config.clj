@@ -1,7 +1,4 @@
-(ns script.generate
-  (:gen-class)
-  (:refer-clojure :exclude [==])
-  (:require [whodunit.core :refer :all]))
+(ns script.config)
 
 ;; important to consider if config can even be solved with currently supported rules. e.g. duplicate values make membero
 ;; relations far less effective.
@@ -22,15 +19,3 @@
                           ;; :color ["red" "green" "blue" "yellow" "white"]
                           :location ["park" "pier" "palace" "plaza" "parlor"]
                           :item ["comb" "cowl" "coin" "cap" "crowbar"]}}})
-
-(println "---------- Logic Puzzle Generation ----------")
-(println "Generating...")
-(let [config-size (if (>= (count *command-line-args*) 2)
-                    (Integer/parseInt (second *command-line-args*))
-                    3)
-      config (get configs config-size)
-      rules (time (puzzle config))]
-  (println "\nConfig:\n" config)
-  (println "\nRules:")
-  (doseq [[idx item] (map-indexed vector (rules-text rules))]
-    (println (str (inc idx) ".") item)))

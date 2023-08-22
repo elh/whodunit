@@ -9,8 +9,8 @@ lint:
 
 .PHONY: generate run
 generate run:
-	@lein exec -p script/generate.clj
+	@lein exec -p src/script/generate.clj
 
 .PHONY: zebra
 zebra:
-	@lein exec -p script/zebra.clj
+	@lein exec -p src/script/zebra.clj

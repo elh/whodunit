@@ -236,22 +236,18 @@
      (loop [rules (vec rules)                  ;; rules as vector. we need conj to the end because goal order matters
             last-soln nil]                     ;; last candidate solution from last run+
        ;; don't add a new rule on first iteration. we want to terminate if initial rules are already complete
-       (let [new-rule (if (nil? last-soln)
-                        nil
+       (let [new-rule (when (some? last-soln)
                         (if (nil? last-soln)
                           (generate-rule config hs)
                           (generate-rule-from-soln last-soln config hs)))]
          ;; prevent identical duplicate rules
          (if (and (some? new-rule) (contains? (set (map #(:data %) rules)) (:data new-rule)))
            (do
-             (when DEBUG
-               (println "DEBUG - duplicate rule"))
+             (when DEBUG (println "DEBUG - duplicate rule"))
              (recur rules last-soln))
            (let [new-rules (if (some? new-rule) (conj rules new-rule) rules)
                  res (time (run+ (fn [q]
                                    (and*
-                                    ;; OMG huge perf improvement here with the fixed ordering of goals. sloppy
-                                    ;; order of conj on lists. it is important that the permuto rule is early
                                     (into [] (concat
                                               [(== hs q)
                                                (== q (get lvars :records))
@@ -261,8 +257,7 @@
                                                (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
                                                        (keys (get lvars :values)))]
                                               (mapv #(:goal %) new-rules)))))))]
-             (when DEBUG
-               (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
+             (when DEBUG (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
              (if (nil? (:soln res))
                (if (some? new-rule)
                  (recur rules last-soln)
@@ -274,8 +269,7 @@
                    (println "DEBUG - rule code:" (:code new-rule)))
                  (if (and (:grounded? res) (not (:has-more? res)))
                    (do
-                     (when DEBUG
-                       (println "DEBUG - done: soln =" (:soln res)))
+                     (when DEBUG (println "DEBUG - done: soln =" (:soln res)))
                      new-rules)
                    (recur new-rules (:soln res))))))))))))
 
