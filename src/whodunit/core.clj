@@ -273,6 +273,56 @@
                      new-rules)
                    (recur new-rules (:soln res))))))))))))
 
+;; Run the super heavy weight permuteo rule last, after the puzzle-specific rules.
+(defn puzzle-fast-permuto-last
+  ([config] (puzzle-fast-permuto-last config (lvar) []))
+  ;; hs is an lvar defined outside of run so we can inject rules
+  ([config hs rules]
+   (let [lvars (init-lvars config)
+         ;; shuffled once up front
+         config (assoc config :values (reduce-kv (fn [m k v] (assoc m k (shuffle v)))
+                                                 {}
+                                                 (get config :values)))]
+     (loop [rules (vec rules)                  ;; rules as vector. we need conj to the end because goal order matters
+            last-soln nil]                     ;; last candidate solution from last run+
+       ;; don't add a new rule on first iteration. we want to terminate if initial rules are already complete
+       (let [new-rule (when (some? last-soln)
+                        (if (nil? last-soln)
+                          (generate-rule config hs)
+                          (generate-rule-from-soln last-soln config hs)))]
+         ;; prevent identical duplicate rules
+         (if (and (some? new-rule) (contains? (set (map #(:data %) rules)) (:data new-rule)))
+           (do
+             (when DEBUG (println "DEBUG - duplicate rule"))
+             (recur rules last-soln))
+           (let [new-rules (if (some? new-rule) (conj rules new-rule) rules)
+                 res (time (run+ (fn [q]
+                                   (and*
+                                    (into [] (concat
+                                              [(== hs q)
+                                               (== q (get lvars :records))
+                                               ;; pin order of :name to prevent redundant solutions. do not use shuffled!
+                                               (== (get-in config [:values :name]) (get-in lvars [:values :name]))]
+                                              (mapv #(:goal %) new-rules)
+                                              [;; defining solution space given the config. this could be made more flexible
+                                               (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                                       (keys (get lvars :values)))]))))))]
+             (when DEBUG (println "DEBUG - run+: grounded? =" (:grounded? res) ", has-more? =" (:has-more? res)))
+             (if (nil? (:soln res))
+               (if (some? new-rule)
+                 (recur rules last-soln)
+                 ;; starting rules were bad
+                 (throw (Exception. "Initial rules provided to puzzle-fast have no valid solution")))
+               (do
+                 (when (and DEBUG (some? new-rule))
+                   (println "DEBUG - added rule:" (count new-rules) "rules")
+                   (println "DEBUG - rule code:" (:code new-rule)))
+                 (if (and (:grounded? res) (not (:has-more? res)))
+                   (do
+                     (when DEBUG (println "DEBUG - done: soln =" (:soln res)))
+                     new-rules)
+                   (recur new-rules (:soln res))))))))))))
+
 (defn count-solutions [config]
   (let [lvars (init-lvars config)
         res (run+ (fn [q]

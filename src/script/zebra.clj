@@ -44,7 +44,8 @@
 
 (def config {:values {:house-idx [1 2 3 4 5]
                       :house-color ["blue" "green" "ivory" "red" "yellow"]
-                      :nationality ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"]
+                      ;; NOTE: renamed from nationality to use with puzzle fns
+                      :name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"]
                       :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
                       :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
                       :pet ["dog" "fox" "horse" "snail" "zebra"]}})
@@ -69,22 +70,22 @@
    (membero (new-rec config {:house-idx 3
                              :drinks "milk"}) q)
    (membero (new-rec config {:house-idx 1
-                             :nationality "norwegian"}) q)
-   (ordero config nexto :house-idx (new-rec config {:nationality "norwegian"}) (new-rec config {:house-color "blue"}) q)
+                             :name "norwegian"}) q)
+   (ordero config nexto :house-idx (new-rec config {:name "norwegian"}) (new-rec config {:house-color "blue"}) q)
    (ordero config righto :house-idx (new-rec config {:house-color "ivory"}) (new-rec config {:house-color "green"}) q)
    (membero (new-rec config {:house-color "red"
-                             :nationality "englishman"}) q)
+                             :name "englishman"}) q)
    (membero (new-rec config {:house-color "yellow"
                              :smokes "kools"}) q)
-   (membero (new-rec config {:nationality "spaniard"
+   (membero (new-rec config {:name "spaniard"
                              :pet "dog"}) q)
    (membero (new-rec config {:house-color "green"
                              :drinks "coffee"}) q)
-   (membero (new-rec config {:nationality "ukrainian"
+   (membero (new-rec config {:name "ukrainian"
                              :drinks "tea"}) q)
    (membero (new-rec config {:drinks "orange-juice"
                              :smokes "lucky-strike"}) q)
-   (membero (new-rec config {:nationality "japanese"
+   (membero (new-rec config {:name "japanese"
                              :smokes "parliaments"}) q)
    (membero (new-rec config {:smokes "old-gold"
                              :pet "snail"}) q)
@@ -100,11 +101,42 @@
 (println "=======================================================")
 
 (println "\n---------- Run zebra rules directly with run+ ----------")
-(time (run+ (fn [q] (and* (zebra-puzzle-rules q)))))
+(pp/pprint (time (run+ (fn [q] (and* (concat [(== q (map #(new-rec config {:house-idx %}) (range 1 6)))]
+                                             (zebra-puzzle-rules q)))))))
+;; 24 ms
+;; same speed as before.
+;; note i am manually adding the house-idx order constraint
 
-(println "\n---------- Run zebra with puzzle-fast-fixed-order ----------")
+;; (println "\n---------- Run zebra rules directly with puzzle-fast-fixed-order setup manually ----------")
+;; (let [hs (lvar)
+;;       lvars (init-lvars config)]
+;;   (pp/pprint (time (run+ (fn [q] (and* (into [] (concat
+;;                                                  [(== hs q)
+;;                                                   (== q (get lvars :records))
+;;                                                   (== (get-in config [:values :name]) (get-in lvars [:values :name]))
+;;                                                   (everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+;;                                                           (keys (get lvars :values)))]
+;;                                                  [(== q (map #(new-rec config {:house-idx %}) (range 1 6)))]
+;;                                                  (zebra-puzzle-rules hs)))))))))
+;; note. this never completed! issues with the order of the permuto rule
+
+(println "\n---------- Run zebra rules directly with puzzle-fast-fixed-order setup manually. fixed order ----------")
+(let [hs (lvar)
+      lvars (init-lvars config)]
+  (pp/pprint (time (run+ (fn [q] (and* (into [] (concat
+                                                 [(== hs q)
+                                                  (== q (get lvars :records))
+                                                  (== (get-in config [:values :name]) (get-in lvars [:values :name]))]
+                                                 (zebra-puzzle-rules hs)
+                                                 [(everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
+                                                          (keys (get lvars :values)))]))))))))
+;; 300 ms
+
+(println "\n---------- Run zebra with puzzle-fast-permuto-last ----------")
 (let [hs (lvar)]
-  (time (puzzle-fast-fixed-order config hs (map (fn [x] {:goal x}) (zebra-puzzle-rules hs)))))
+  (pp/pprint (time (puzzle-fast-permuto-last config hs (map (fn [x] {:goal x}) (zebra-puzzle-rules hs))))))
+;; 300 ms
+;; after we made the fix
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; core.logic benchmark implementation
