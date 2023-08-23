@@ -67,7 +67,7 @@
 (let [hs (lvar)]
   (pp/pprint (time (puzzle config
                            hs
-                           (map (fn [x] {:goal x}) (zebra-goals hs))))))
+                           (mapv (fn [x] {:goal x}) (zebra-goals hs))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; core.logic benchmark implementation

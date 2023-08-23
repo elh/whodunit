@@ -106,6 +106,9 @@
 ;; Config :values define the set of possible records key-values. unique :name values are required.
 ;; Returns the solution and a list of rules with a :goal function, structured :data map, and :code text.
 ;;
+;; TODO: support constraining the solution that are not presented as rules. e.g. "the solution must be that dave is
+;;       guilty, but that should not be directly given away by a rule"
+;; TODO: make the additional details on rules optional. probably only the actual goal is strictly required.
 ;; TODO: intelligently sort rules to optimize solving
 ;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 ;; TODO: shuffle config on each iteration so real solution isn't actually pre-defined

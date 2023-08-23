@@ -31,7 +31,7 @@
                (membero (new-rec config {:item "cowl" :name "carol"}) q)
                (membero (new-rec config {:location "pier" :item "crowbar"}) q)
                (membero (new-rec config {:location "park" :name "carol"}) q)]]
-    (map (fn [x] {:goal x}) goals)))
+    (mapv (fn [x] {:goal x}) goals)))
 
 (defn custom [q]
   (let [goals [(membero (new-rec config {:name "alice" :location "pier"}) q)
@@ -44,7 +44,7 @@
                (membero (new-rec config {:item "cap" :name "bob"}) q)
                (membero (new-rec config {:item "cowl" :name "carol"}) q)
                (membero (new-rec config {:location "park" :name "carol"}) q)]]
-    (map (fn [x] {:goal x}) goals)))
+    (mapv (fn [x] {:goal x}) goals)))
 
 
 (println "5 records with :name and 2 other attributes. all attributes are unique. (5!)^3 = 1,728,000 possibilities\n")

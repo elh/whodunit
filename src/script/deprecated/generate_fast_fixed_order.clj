@@ -15,7 +15,8 @@
       rules (:rules res)]
   (when (nil? config)
     (throw (Exception. (str "No config found for key: " config-key))))
-  (println "\nConfig:\n" config)
+  (println "\nConfig:")
+  (pp/pprint config)
   (println "\nRules:")
   (doseq [[idx item] (map-indexed vector (rules-text rules))]
     (println (str (inc idx) ".") item))

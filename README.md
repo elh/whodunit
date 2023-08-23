@@ -20,12 +20,22 @@ With 5 records and 5 attributes with unique values, there are (5!)^5 or 24,883,2
 
 ```clojure
 ;; "nationality" is renamed to `:name` for `puzzle`
-(puzzle {:values {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"]
+(def config {:values {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"]
                   :house-idx [1 2 3 4 5]
                   :house-color ["blue" "green" "ivory" "red" "yellow"]
                   :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
                   :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
                   :pet ["dog" "fox" "horse" "snail" "zebra"]}})
+
+;; generate a puzzle rule set
+(puzzle config)
+
+;; generate a puzzle rule set with starting rules
+;; TODO: support providing a secret constraint over the solution that is not directly exposed as a rule
+(let [hs (lvar)]
+  (puzzle config hs [{:data {:type :membero
+                             :kvs {:drinks "water" :name "norwegian"}}
+                      :goal (membero (new-rec config {:drinks "water" :name "norwegian"}) hs)}]))
 ```
 
 ```plaintext
@@ -33,7 +43,14 @@ With 5 records and 5 attributes with unique values, there are (5!)^5 or 24,883,2
 "Elapsed time: 952.507166 msecs"
 
 Config:
- {:values {:name [englishman japanese norwegian spaniard ukrainian], :house-idx [1 2 3 4 5], :house-color [blue green ivory red yellow], :drinks [coffee milk orange-juice tea water], :smokes [chesterfields kools lucky-strike old-gold parliaments], :pet [dog fox horse snail zebra]}}
+{:values
+ {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"],
+  :house-idx [1 2 3 4 5],
+  :house-color ["blue" "green" "ivory" "red" "yellow"],
+  :drinks ["coffee" "milk" "orange-juice" "tea" "water"],
+  :smokes
+  ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"],
+  :pet ["dog" "fox" "horse" "snail" "zebra"]}}
 
 Rules:
 1. name is spaniard and house-color is yellow
@@ -100,12 +117,16 @@ Solution:
 ```
 
 ```plaintext
-> make generate
+> make puzzle
 Generating...
 "Elapsed time: 36.659625 msecs"
 
 Config:
- {:values {:name [alice bob carol dave], :guilty [true false false false], :color [red blue green white], :location [park pier palace plaza]}}
+{:values
+ {:name ["alice" "bob" "carol"],
+  :guilty [true false false],
+  :color ["red" "blue" "green"],
+  :location ["park" "pier" "palace"]}}
 
 Rules:
 1. name is carol and guilty is false
@@ -179,9 +200,11 @@ Solution:
 ```
 
 ### TODO:
-* Support more rule (hint) types. I am starting very simple but this is easily extensible. Take inspiration from logic puzzles and add rules thematic to murder mysteries.
+* Support more rule types. I am starting very simple but this is easily extensible. Take inspiration from logic puzzles and add rules thematic to murder mysteries.
+* Support constraining the solution that are not presented as rules. e.g. "The solution must be that dave is guilty, but that should not be directly given away by a rule".
+* Make the additional details on rules optional. Probably only the actual goal is strictly required.
 * Support user-defined constraints. e.g. Never generate a rule that on its own gives away who is guilty.
 * Intelligently sort rules to optimize solving.
 * Steer generation to produce "good" puzzles. e.g. at a tunable level of difficulty.
 * Support an interactive mode of puzzle generation where all rules are not all created at once.
-* Improve rule copy.
+* Improve rule copy. Not a priority until rule set is more developed. Maybe this should always be a caller-sided problem.

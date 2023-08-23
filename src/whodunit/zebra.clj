@@ -120,11 +120,11 @@
 ;; whoduinit puzzle generation config for the zebra puzzle
 ;; note: name renamed from nationality in order to work with the puzzle generation functionality
 (def config {:values {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"]
-                            :house-idx [1 2 3 4 5]
-                            :house-color ["blue" "green" "ivory" "red" "yellow"]
-                            :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
-                            :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
-                            :pet ["dog" "fox" "horse" "snail" "zebra"]}})
+                      :house-idx [1 2 3 4 5]
+                      :house-color ["blue" "green" "ivory" "red" "yellow"]
+                      :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
+                      :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
+                      :pet ["dog" "fox" "horse" "snail" "zebra"]}})
 
 ;; zebra-goals returns the puzzle rules as a vector of goals. This enables introspection and reorderings which could not
 ;; be done if just handled as an opaque (all ...) goal.

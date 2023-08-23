@@ -7,8 +7,8 @@ test:
 lint:
 	@clj -M:lint
 
-.PHONY: generate run
-generate run:
+.PHONY: puzzle run
+puzzle run:
 	@lein exec -p src/script/puzzle.clj 4
 
 .PHONY: zebra
