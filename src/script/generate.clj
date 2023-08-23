@@ -2,7 +2,8 @@
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]
-            [script.config :as c]))
+            [script.config :as c]
+            [clojure.pprint :as pp]))
 
 (println "---------- Logic Puzzle Generation ----------")
 (println "Generating...")
@@ -10,10 +11,13 @@
                    (second *command-line-args*)
                    "3")
       config (get c/configs config-key)
-      rules (time (puzzle config))]
+      res (time (puzzle config))
+      rules (:rules res)]
   (when (nil? config)
     (throw (Exception. (str "No config found for key: " config-key))))
   (println "\nConfig:\n" config)
   (println "\nRules:")
   (doseq [[idx item] (map-indexed vector (rules-text rules))]
-    (println (str (inc idx) ".") item)))
+    (println (str (inc idx) ".") item))
+  (println "\nSolution:")
+  (pp/pprint (:soln res)))

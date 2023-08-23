@@ -121,7 +121,8 @@
             (when DEBUG
               (println "DEBUG - added rule:" (count new-rules) "rules," (:soln-count res) "possible solutions"))
             (if (and (:grounded? res) (= (:soln-count res) 1))
-              new-rules
+              {:rules new-rules
+               :soln (:soln res)}
               (recur new-rules (:soln-count res)))))))))
 
 ;; Newer approach
@@ -161,7 +162,8 @@
                 (when DEBUG
                   (println "DEBUG - added rule:" (count new-rules) "rules"))
                 (if (and (:grounded? res) (not (:has-more? res)))
-                  new-rules
+                  {:rules new-rules
+                   :soln (:soln res)}
                   (recur new-rules))))))))))
 
 ;; A faster approach. Instead of generating a random rule and hoping it conforms to the solution space, instead use a
@@ -218,7 +220,8 @@
                   (do
                     (when DEBUG
                       (println "DEBUG - done: soln =" (:soln res)))
-                    new-rules)
+                    {:rules new-rules
+                     :soln (:soln res)})
                   (recur new-rules (:soln res)))))))))))
 
 ;; Fixed a big error in past implementations. We need to make sure the order of rules are passed in correctly to run+.
@@ -270,7 +273,8 @@
                  (if (and (:grounded? res) (not (:has-more? res)))
                    (do
                      (when DEBUG (println "DEBUG - done: soln =" (:soln res)))
-                     new-rules)
+                     {:rules new-rules
+                      :soln (:soln res)})
                    (recur new-rules (:soln res))))))))))))
 
 ;; Run the super heavy weight permuteo rule last, after the puzzle-specific rules.
@@ -321,7 +325,8 @@
                  (if (and (:grounded? res) (not (:has-more? res)))
                    (do
                      (when DEBUG (println "DEBUG - done: soln =" (:soln res)))
-                     new-rules)
+                     {:rules new-rules
+                      :soln (:soln res)})
                    (recur new-rules (:soln res))))))))))))
 
 (defn count-solutions [config]
