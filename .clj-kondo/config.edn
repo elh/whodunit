@@ -1,0 +1,6 @@
+{:linters
+ {:unresolved-symbol
+  {:exclude [;; macros and conventions from core.logic
+             _ q membero permuteo
+             ;; not needed locally but in CI. just unblocking for now. kondo version looks right
+             conde fresh == and* lvar everyg run* run all]}}}

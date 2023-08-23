@@ -11,6 +11,8 @@
 ;; There is no difference between run 2 and run*.
 ;;
 ;; no perf difference between original and custom
+;;
+;; using puzzle-fast-fixed-order
 
 (def config {:values {:name ["alice" "bob" "carol" "dave" "eve"]
                       :location ["park" "pier" "palace" "plaza" "parlor"]

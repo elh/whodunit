@@ -58,12 +58,14 @@
          [(fd/- x 1 y)]))
 
 (defn ordero [config idx-rel key x y hs]
-  (fresh [x-idx y-idx]
+  ;; prevent linting issues with macros. don't collide with declared vars in whodunit.zebra... :grimace:
+  (declare x-idx-2 y-idx-2)
+  (fresh [x-idx-2 y-idx-2]
          (membero x hs)
          (membero y hs)
-         (== x (new-rec config {key x-idx}))
-         (== y (new-rec config {key y-idx}))
-         (idx-rel x-idx y-idx)))
+         (== x (new-rec config {key x-idx-2}))
+         (== y (new-rec config {key y-idx-2}))
+         (idx-rel x-idx-2 y-idx-2)))
 
 (defn zebra-puzzle-rules [q]
   [;; this ordering from core.logic benchmark v. original problem statement improves latency from 1200ms to 23ms!!!
@@ -134,6 +136,8 @@
 
 (println "\n---------- Run zebra with puzzle-fast-permuto-last ----------")
 (let [hs (lvar)]
+  ;; TODO: print solution
+  ;; TODO: print rule text
   (pp/pprint (time (puzzle-fast-permuto-last config hs (map (fn [x] {:goal x}) (zebra-puzzle-rules hs))))))
 ;; 300 ms
 ;; after we made the fix

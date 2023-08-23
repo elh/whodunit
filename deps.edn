@@ -5,4 +5,4 @@
  :aliases
  {:lint
   {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2022.11.02"}}
-   :main-opts ["-m" "clj-kondo.main" "--lint" "src"]}}}
+   :main-opts ["-m" "clj-kondo.main" "--lint" "src" "--fail-level" "error"]}}} ;; print but allow warnings

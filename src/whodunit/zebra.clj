@@ -16,6 +16,8 @@
 (defn zebrao-vec [q]
   (macro/symbol-macrolet
    [_ (lvar)]
+   ;; prevent linting issues with macros.
+   (declare x-idx y-idx)
    (letfn [(righto [x y]
                    (fd/+ x 1 y))
            (nexto [x y]

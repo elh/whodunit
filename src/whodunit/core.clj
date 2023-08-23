@@ -274,6 +274,8 @@
                    (recur new-rules (:soln res))))))))))))
 
 ;; Run the super heavy weight permuteo rule last, after the puzzle-specific rules.
+;; TODO: make this just puzzle. move others to a deprecated package
+;; TODO: add documentation
 (defn puzzle-fast-permuto-last
   ([config] (puzzle-fast-permuto-last config (lvar) []))
   ;; hs is an lvar defined outside of run so we can inject rules
@@ -296,6 +298,7 @@
              (when DEBUG (println "DEBUG - duplicate rule"))
              (recur rules last-soln))
            (let [new-rules (if (some? new-rule) (conj rules new-rule) rules)
+                 ;; TODO: remove timing. just print a dot for visual feedback?
                  res (time (run+ (fn [q]
                                    (and*
                                     (into [] (concat
@@ -314,9 +317,7 @@
                  ;; starting rules were bad
                  (throw (Exception. "Initial rules provided to puzzle-fast have no valid solution")))
                (do
-                 (when (and DEBUG (some? new-rule))
-                   (println "DEBUG - added rule:" (count new-rules) "rules")
-                   (println "DEBUG - rule code:" (:code new-rule)))
+                 (when (and DEBUG (some? new-rule)) (println "DEBUG - added rule:" (count new-rules) "rules\nDEBUG - rule code:" (:code new-rule)))
                  (if (and (:grounded? res) (not (:has-more? res)))
                    (do
                      (when DEBUG (println "DEBUG - done: soln =" (:soln res)))
@@ -336,7 +337,7 @@
                               (keys (get lvars :values)))))) {:soln-count? true})]
     (:soln-count res)))
 
-;; Jank text generation
+;; Jank text generation. Note that when presenting, you will probably want to randomize rule order.
 (defn rules-text [rules]
   (map (fn [r]
          (let [kvs (:kvs (:data r))]

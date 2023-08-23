@@ -2,14 +2,13 @@
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]
-            [script.config :as c]
-            [clojure.test :as t]))
+            [script.config :as c]))
 
 (println "---------- Logic Puzzle Generation ----------")
 (println "Generating...")
 (let [config-key (if (>= (count *command-line-args*) 2)
                    (second *command-line-args*)
-                   3)
+                   "3")
       config (get c/configs config-key)
       rules (time (puzzle-exhaustive config))]
   (when (nil? config)
