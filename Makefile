@@ -9,7 +9,7 @@ lint:
 
 .PHONY: generate run
 generate run:
-	@lein exec -p src/script/generate_fast_permuto_last.clj
+	@lein exec -p src/script/puzzle.clj 4
 
 .PHONY: zebra
 zebra:

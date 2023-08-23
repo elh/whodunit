@@ -1,7 +1,8 @@
-(ns script.generate-exhaustive
+(ns script.deprecated.generate-exhaustive
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]
+            [whodunit.deprecated.core :refer :all]
             [script.config :as c]
             [clojure.pprint :as pp]))
 

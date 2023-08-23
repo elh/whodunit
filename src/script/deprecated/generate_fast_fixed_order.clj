@@ -1,7 +1,8 @@
-(ns script.generate-fast-permuto-last
+(ns script.deprecated.generate-fast-fixed-order
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]
+            [whodunit.deprecated.core :refer :all]
             [script.config :as c]
             [clojure.pprint :as pp]))
 
@@ -11,7 +12,7 @@
                    (second *command-line-args*)
                    "3")
       config (get c/configs config-key)
-      res (time (puzzle-fast-permuto-last config))
+      res (time (puzzle-fast-fixed-order config))
       rules (:rules res)]
   (when (nil? config)
     (throw (Exception. (str "No config found for key: " config-key))))

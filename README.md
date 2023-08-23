@@ -1,43 +1,52 @@
 # whodunit
 
-Generating Logic Puzzles
+### Logic Puzzle Generation
+Given a solution space defined via config, generate a set of rules that arrives at a single solution.
+The solution space is defined as a set of records identified by a unique :name values.
+
+Example:<br>
+The goal is to generate a rule set to answer "who killed dave?"
+* 3 people: alice, bob, and carol
+* 3 clothing colors: red, blue, green
+* 3 locations: park, pier, and palace
+* 1 person is guilty; the other 2 are innocent
+
+
+
+Logic puzzles scale (n!)^m where n is the number of values for each key and m is the number of keys. This is the base
+case where each key has a unique value that will be assigned to a single value.
+
+see `run+` and `puzzle`
+
 ```plaintext
 > make generate
 ---------- Logic Puzzle Generation ----------
-DEBUG - generate-rule: type = membero, kvs = #{[:guilty false] [:name carol]}
-DEBUG - added rule: 1 rules, 72 possible solutions
-DEBUG - generate-rule: type = membero, kvs = #{[:name carol] [:color green]}
-DEBUG - added rule: 2 rules, 24 possible solutions
-DEBUG - generate-rule: type = membero, kvs = #{[:color red] [:name carol]}
-DEBUG - generate-rule: type = membero, kvs = #{[:location pier] [:color green]}
-DEBUG - added rule: 3 rules, 8 possible solutions
-DEBUG - generate-rule: type = membero, kvs = #{[:name carol] [:color green]}
-DEBUG - generate-rule: type = membero, kvs = #{[:guilty true] [:color green]}
-DEBUG - generate-rule: type = membero, kvs = #{[:location palace] [:color green]}
-DEBUG - generate-rule: type = membero, kvs = #{[:color red] [:name alice]}
-DEBUG - added rule: 4 rules, 4 possible solutions
-DEBUG - generate-rule: type = membero, kvs = #{[:color red] [:name alice]}
-DEBUG - generate-rule: type = membero, kvs = #{[:color blue] [:name carol]}
-DEBUG - generate-rule: type = membero, kvs = #{[:guilty true] [:color green]}
-DEBUG - generate-rule: type = membero, kvs = #{[:location palace] [:guilty false]}
-DEBUG - added rule: 5 rules, 2 possible solutions
-DEBUG - generate-rule: type = membero, kvs = #{[:color blue] [:name carol]}
-DEBUG - generate-rule: type = membero, kvs = #{[:location palace] [:color blue]}
-"Elapsed time: 350.056625 msecs"
+Generating...
+"Elapsed time: 36.659625 msecs"
 
 Config:
- {:values {:name [alice bob carol], :guilty [true false false], :color [red blue green], :location [park pier palace]}}
+ {:values {:name [alice bob carol dave], :guilty [true false false false], :color [red blue green white], :location [park pier palace plaza]}}
 
 Rules:
-1. guilty is false and name is carol
-2. name is carol and color is green
-3. location is pier and color is green
-4. color is red and name is alice
-5. location is palace and guilty is false
-6. location is palace and color is blue
+1. name is carol and guilty is false
+2. name is alice and guilty is false
+3. location is plaza and name is dave
+4. color is green and name is alice
+5. color is white and location is park
+6. color is white and guilty is false
+7. name is bob and guilty is false
+8. name is bob and color is white
+9. color is red and location is plaza
+10. location is palace and color is blue
+
+Solution:
+({:color "green", :name "alice", :guilty false, :location "pier"}
+ {:color "white", :name "bob", :guilty false, :location "park"}
+ {:color "blue", :name "carol", :guilty false, :location "palace"}
+ {:color "red", :name "dave", :guilty true, :location "plaza"})
 ```
 
-The Zebra Puzzle
+### The Zebra Puzzle
 ```plaintext
 > make zebra
 ---------- Zebra Puzzle - using vectors ----------

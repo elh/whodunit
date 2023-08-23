@@ -2,7 +2,8 @@
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [clojure.core.logic :refer :all]
-            [whodunit.core :refer :all]))
+            [whodunit.core :refer :all]
+            [whodunit.deprecated.core :refer :all]))
 
 ;;;;;;;; Testing ordering of rules for puzzle-fast
 ;; Learning:

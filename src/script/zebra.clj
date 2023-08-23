@@ -65,9 +65,9 @@
 ;; after we made the fix
 (println "\n---------- Run zebra with puzzle-fast-permuto-last ----------")
 (let [hs (lvar)]
-  (pp/pprint (time (puzzle-fast-permuto-last config
-                                             hs
-                                             (map (fn [x] {:goal x}) (zebra-goals hs))))))
+  (pp/pprint (time (puzzle config
+                           hs
+                           (map (fn [x] {:goal x}) (zebra-goals hs))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; core.logic benchmark implementation

@@ -1,4 +1,4 @@
-(ns script.generate
+(ns script.puzzle
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [whodunit.core :refer :all]
