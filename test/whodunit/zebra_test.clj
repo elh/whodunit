@@ -22,3 +22,13 @@
                   {:house-idx 5, :house-color "green", :nationality "japanese", :drinks "coffee", :smokes "parliaments", :pet "zebra"}),
           :grounded? true,
           :has-more? false})))
+
+(deftest zebrao-whodunit-test
+  (is (= (run+ zebrao-whodunit)
+         {:soln '({:house-idx 1, :house-color "yellow", :name "norwegian", :drinks "water", :smokes "kools", :pet "fox"}
+                  {:house-idx 2, :house-color "blue", :name "ukrainian", :drinks "tea", :smokes "chesterfields", :pet "horse"}
+                  {:house-idx 3, :house-color "red", :name "englishman", :drinks "milk", :smokes "old-gold", :pet "snail"}
+                  {:house-idx 4, :house-color "ivory", :name "spaniard", :drinks "orange-juice", :smokes "lucky-strike", :pet "dog"}
+                  {:house-idx 5, :house-color "green", :name "japanese", :drinks "coffee", :smokes "parliaments", :pet "zebra"}),
+          :grounded? true,
+          :has-more? false})))
