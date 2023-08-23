@@ -1,26 +1,106 @@
 # whodunit
 
-### Logic Puzzle Generation
-Given a solution space defined via config, generate a set of rules that arrives at a single solution.
-The solution space is defined as a set of records identified by a unique :name values.
+### Logic Puzzle Generation using [core.logic](https://github.com/clojure/core.logic)
+Given a user-defined solution space, generate a set of core.logic rules that arrives at a single solution.
+The solution space is defined as a set of uniquely `:name`-ed map records.
 
 Example:<br>
-The goal is to generate a rule set to answer "who killed dave?"
-* 3 people: alice, bob, and carol
-* 3 clothing colors: red, blue, green
-* 3 locations: park, pier, and palace
-* 1 person is guilty; the other 2 are innocent
+We can generate a rule set to answer "who killed dave?"
+* 3 suspects last night: alice, bob, and carol
+* 3 colors they were wearing: red, blue, green
+* 3 locations they were at: park, pier, and palace
+* 2 of them are innocent. 1 is guilty!
 
+Logic puzzles scale (n!)^m where n is the number of values for each key and m is the number of keys. This is the base case where each key has a unique value that will be assigned to a single value.
 
+See [`run+` and `puzzle`](src/whodunit/core.clj).
 
-Logic puzzles scale (n!)^m where n is the number of values for each key and m is the number of keys. This is the base
-case where each key has a unique value that will be assigned to a single value.
+#### Generating New Variations for the Zebra Puzzle Quickly
+With 5 records and 5 attributes with unique values, there are (5!)^5 or 24,883,200,000 possible solutions! We can generate a new puzzle in ~1s.
 
-see `run+` and `puzzle`
+```clojure
+;; "nationality" is renamed to `:name` for `puzzle`
+(puzzle {:values {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"]
+                  :house-idx [1 2 3 4 5]
+                  :house-color ["blue" "green" "ivory" "red" "yellow"]
+                  :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
+                  :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
+                  :pet ["dog" "fox" "horse" "snail" "zebra"]}})
+```
+
+```plaintext
+> make new-zebra
+"Elapsed time: 952.507166 msecs"
+
+Config:
+ {:values {:name [englishman japanese norwegian spaniard ukrainian], :house-idx [1 2 3 4 5], :house-color [blue green ivory red yellow], :drinks [coffee milk orange-juice tea water], :smokes [chesterfields kools lucky-strike old-gold parliaments], :pet [dog fox horse snail zebra]}}
+
+Rules:
+1. name is spaniard and house-color is yellow
+2. name is ukrainian and pet is snail
+3. house-idx is 4 and drinks is water
+4. drinks is milk and house-idx is 1
+5. smokes is old-gold and name is norwegian
+6. name is japanese and pet is horse
+7. house-idx is 4 and name is japanese
+8. smokes is lucky-strike and drinks is milk
+9. house-color is yellow and house-idx is 3
+10. house-color is yellow and drinks is coffee
+11. pet is fox and house-idx is 3
+12. smokes is kools and name is japanese
+13. pet is snail and house-color is blue
+14. house-idx is 1 and pet is zebra
+15. drinks is coffee and name is spaniard
+16. name is japanese and house-color is ivory
+17. name is ukrainian and house-idx is 2
+18. house-color is green and drinks is milk
+19. house-color is blue and smokes is parliaments
+20. name is norwegian and drinks is tea
+
+Solution:
+({:house-idx 4,
+  :house-color "ivory",
+  :name "japanese",
+  :drinks "water",
+  :smokes "kools",
+  :pet "horse"}
+ {:house-idx 1,
+  :house-color "green",
+  :name "englishman",
+  :drinks "milk",
+  :smokes "lucky-strike",
+  :pet "zebra"}
+ {:house-idx 5,
+  :house-color "red",
+  :name "norwegian",
+  :drinks "tea",
+  :smokes "old-gold",
+  :pet "dog"}
+ {:house-idx 2,
+  :house-color "blue",
+  :name "ukrainian",
+  :drinks "orange-juice",
+  :smokes "parliaments",
+  :pet "snail"}
+ {:house-idx 3,
+  :house-color "yellow",
+  :name "spaniard",
+  :drinks "coffee",
+  :smokes "chesterfields",
+  :pet "fox"})
+```
+
+#### Generating Custom Puzzles
+
+```clojure
+(puzzle {:values {:name ["alice" "bob" "carol"]
+                  :guilty [true false false]
+                  :color ["red" "blue" "green"]
+                  :location ["park" "pier" "palace"]}})
+```
 
 ```plaintext
 > make generate
----------- Logic Puzzle Generation ----------
 Generating...
 "Elapsed time: 36.659625 msecs"
 
@@ -46,14 +126,11 @@ Solution:
  {:color "red", :name "dave", :guilty true, :location "plaza"})
 ```
 
-### The Zebra Puzzle
+### Context: Solving the Zebra Puzzle with core.logic
+
 ```plaintext
 > make zebra
 ---------- Zebra Puzzle - using vectors ----------
-"Elapsed time: 27.248042 msecs"
-"Elapsed time: 15.686916 msecs"
-"Elapsed time: 14.313708 msecs"
-"Elapsed time: 13.928584 msecs"
 "Elapsed time: 13.858833 msecs"
 {:soln
  ((1 "yellow" "norwegian" "water" "kools" "fox")
@@ -65,10 +142,6 @@ Solution:
  :has-more? false}
 
 ---------- Zebra Puzzle - using maps ----------
-"Elapsed time: 28.097333 msecs"
-"Elapsed time: 23.879833 msecs"
-"Elapsed time: 26.963625 msecs"
-"Elapsed time: 22.967208 msecs"
 "Elapsed time: 22.87375 msecs"
 {:soln
  ({:house-idx 1,
@@ -104,3 +177,11 @@ Solution:
  :grounded? true,
  :has-more? false}
 ```
+
+### TODO:
+* Support more rule (hint) types. I am starting very simple but this is easily extensible. Take inspiration from logic puzzles and add rules thematic to murder mysteries.
+* Support user-defined constraints. e.g. Never generate a rule that on its own gives away who is guilty.
+* Intelligently sort rules to optimize solving.
+* Steer generation to produce "good" puzzles. e.g. at a tunable level of difficulty.
+* Support an interactive mode of puzzle generation where all rules are not all created at once.
+* Improve rule copy.

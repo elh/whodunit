@@ -14,3 +14,7 @@ generate run:
 .PHONY: zebra
 zebra:
 	@lein exec -p src/script/zebra.clj
+
+.PHONY: new-zebra
+new-zebra:
+	@lein exec -p src/script/new_zebra.clj

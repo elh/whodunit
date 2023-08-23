@@ -7,21 +7,20 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Logic Puzzle Generation
-;; Given a solution space defined via config, generate a set of rules that arrives at a single solution.
-;; The solution space is defined as a set of records identified by a unique :name values.
+;; Given a user-defined solution space, generate a set of core.logic rules that arrives at a single solution.
+;; The solution space is defined as a set of uniquely `:name`-ed map records.
 ;;
 ;; Example:
-;; 3 people: alice, bob, and carol
-;; 3 clothing colors: red, blue, green
-;; 3 locations: park, pier, and palace
-;; 1 person is guilty; the other 2 are innocent
-;; Question: Who killed dave?
-;; The goal is to generate a rule set to answers that question.
+;; The goal is to generate a rule set to answer "who killed dave?"
+;; * 3 suspects last night: alice, bob, and carol
+;; * 3 colors they were wearing: red, blue, green
+;; * 3 locations they were at: park, pier, and palace
+;; * 2 of them are innocent. 1 is guilty!
 ;;
 ;; Logic puzzles scale (n!)^m where n is the number of values for each key and m is the number of keys. This is the base
 ;; case where each key has a unique value that will be assigned to a single value.
 ;;
-;; see `run+` and `puzzle`
+;; See `run+` and `puzzle`.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Returns true if input is grounded as defined by not containing any core.logic symbols like `'_0`.
@@ -71,7 +70,8 @@
 
 ;; Generate a new candidate rule for a puzzle being created.
 ;;
-;; TODO: support more types of rules. take inspiration from logic puzzles. add rules useful for murder mysteries
+;; TODO: support more rule (hint) types. I am starting very simple but this is easily extensible. Take inspiration from
+;;       logic puzzles and add rules thematic to murder mysteries.
 ;; TODO: add some user-defined constraints. e.g. never generate a rule that on its own gives away who is guilty
 (defn generate-rule [config q]
   (let [ks (keys (get config :values))
@@ -106,12 +106,16 @@
 ;; Config :values define the set of possible records key-values. unique :name values are required.
 ;; Returns the solution and a list of rules with a :goal function, structured :data map, and :code text.
 ;;
+;; TODO: intelligently sort rules to optimize solving
 ;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 ;; TODO: shuffle config on each iteration so real solution isn't actually pre-defined
-;; TODO: support an interactive mode of puzzle generation where all rules are not set at once
+;; TODO: support an interactive mode of puzzle generation where all rules are not all created at once
+;; TODO: steer generation to produce "good" puzzles. e.g. at a tunable level of difficulty
 (defn puzzle
-  ;; hs is an lvar defined outside of run so we can inject rules
   ([config] (puzzle config (lvar) []))
+  ;; hs is an lvar defined outside of run so we can inject rules
+  ;; rules as a vector of goals relative to hs. A vector enables introspection and reorderings which could not
+  ;; be done if just handed an opaque `all` goal.
   ([config hs rules]
    (let [lvars (init-lvars config)
          ;; shuffled once up front
@@ -160,6 +164,7 @@
                    (recur new-rules (:soln res))))))))))))
 
 ;; Jank text generation. Note that when presenting, you will probably want to randomize rule order.
+;; TODO: improve this...
 (defn rules-text [rules]
   (map (fn [r]
          (let [kvs (:kvs (:data r))]

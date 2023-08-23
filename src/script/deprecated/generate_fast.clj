@@ -6,7 +6,6 @@
             [script.config :as c]
             [clojure.pprint :as pp]))
 
-(println "---------- Logic Puzzle Generation ----------")
 (println "Generating...")
 (let [config-key (if (>= (count *command-line-args*) 2)
                    (second *command-line-args*)
