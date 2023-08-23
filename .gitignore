@@ -1,10 +1,14 @@
+# my random scripts
 ignore/
 
+# ignoring tooling
+.clj-kondo/*
+.clj-kondo/.cache/
+# except kondo config
+!.clj-kondo/config.edn
 .calva/
-.clj-kondo/
 .lsp/
 .cpcache/
-
 .lein-failures
 
 /target

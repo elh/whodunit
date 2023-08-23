@@ -8,7 +8,7 @@
 (println "Generating...")
 (let [config-key (if (>= (count *command-line-args*) 2)
                    (second *command-line-args*)
-                   3)
+                   "3")
       config (get c/configs config-key)
       rules (time (puzzle-fast-permuto-last config))]
   (when (nil? config)
