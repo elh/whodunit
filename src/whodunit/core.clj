@@ -114,6 +114,7 @@
 ;; TODO: shuffle config on each iteration so real solution isn't actually pre-defined
 ;; TODO: support an interactive mode of puzzle generation where all rules are not all created at once
 ;; TODO: steer generation to produce "good" puzzles. e.g. at a tunable level of difficulty
+;; TODO: benchmark
 (defn puzzle
   ([config] (puzzle config (lvar) []))
   ;; hs is an lvar defined outside of run so we can inject rules

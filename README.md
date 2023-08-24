@@ -1,7 +1,5 @@
-# whodunit
-
-### Logic Puzzle Generation using [core.logic](https://github.com/clojure/core.logic)
-Given a user-defined solution space, generate a set of core.logic rules that arrives at a single solution.
+# whodunit - Logic Puzzle Generation with [core.logic](https://github.com/clojure/core.logic)
+Given a provided solution space, generate a set of core.logic rules that arrives at a single solution.
 The solution space is defined as a set of uniquely `:name`-ed map records.
 
 Example:<br>
@@ -15,17 +13,17 @@ Logic puzzles scale (n!)^m where n is the number of values for each key and m is
 
 See [`run+` and `puzzle`](src/whodunit/core.clj).
 
-#### Generating New Variations for the Zebra Puzzle Quickly
-With 5 records and 5 attributes with unique values, there are (5!)^5 or 24,883,200,000 possible solutions! We can generate a new puzzle in ~1s.
+### Generating Puzzles
+Let's generate a new variation of the famous Zebra Puzzle. With 5 records and 5 attributes with unique values, there are (5!)^5 or 24,883,200,000 possible solutions! We can generate a new puzzle in ~1s.
 
 ```clojure
 ;; "nationality" is renamed to `:name` for `puzzle`
 (def config {:values {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"]
-                  :house-idx [1 2 3 4 5]
-                  :house-color ["blue" "green" "ivory" "red" "yellow"]
-                  :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
-                  :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
-                  :pet ["dog" "fox" "horse" "snail" "zebra"]}})
+                      :house-idx [1 2 3 4 5]
+                      :house-color ["blue" "green" "ivory" "red" "yellow"]
+                      :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
+                      :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
+                      :pet ["dog" "fox" "horse" "snail" "zebra"]}})
 
 ;; generate a puzzle rule set
 (puzzle config)
@@ -107,7 +105,7 @@ Solution:
   :pet "fox"})
 ```
 
-#### Generating Custom Puzzles
+Another example
 
 ```clojure
 (puzzle {:values {:name ["alice" "bob" "carol"]
@@ -118,33 +116,6 @@ Solution:
 
 ```plaintext
 > make puzzle
-Generating...
-"Elapsed time: 36.659625 msecs"
-
-Config:
-{:values
- {:name ["alice" "bob" "carol"],
-  :guilty [true false false],
-  :color ["red" "blue" "green"],
-  :location ["park" "pier" "palace"]}}
-
-Rules:
-1. name is carol and guilty is false
-2. name is alice and guilty is false
-3. location is plaza and name is dave
-4. color is green and name is alice
-5. color is white and location is park
-6. color is white and guilty is false
-7. name is bob and guilty is false
-8. name is bob and color is white
-9. color is red and location is plaza
-10. location is palace and color is blue
-
-Solution:
-({:color "green", :name "alice", :guilty false, :location "pier"}
- {:color "white", :name "bob", :guilty false, :location "park"}
- {:color "blue", :name "carol", :guilty false, :location "palace"}
- {:color "red", :name "dave", :guilty true, :location "plaza"})
 ```
 
 ### Context: Solving the Zebra Puzzle with core.logic
@@ -197,6 +168,13 @@ Solution:
    :pet "zebra"}),
  :grounded? true,
  :has-more? false}
+```
+
+### Development
+See [Makefile](Makefile) for dev commands. Clojure environment set up using Nix.
+```
+> make test
+> make lint
 ```
 
 ### TODO:
