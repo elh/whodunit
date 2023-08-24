@@ -63,7 +63,7 @@
 ;; 300 ms
 ;;
 ;; after we made the fix
-(println "\n---------- Run zebra with puzzle-fast-permuto-last ----------")
+(println "\n---------- Run zebra with puzzle ----------")
 (let [hs (lvar)]
   (pp/pprint (time (puzzle config
                            hs

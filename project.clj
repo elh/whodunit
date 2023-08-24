@@ -10,6 +10,7 @@
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}
-             :dev {:dependencies [[lambdaisland/kaocha "1.85.1342"]]}}
+             :dev {:dependencies [[lambdaisland/kaocha "1.85.1342"]
+                                  [criterium "0.4.6"]]}}
   :plugins [[lein-exec "0.3.7"]]
   :aliases {"kaocha" ["run" "-m" "kaocha.runner"]})

@@ -7,6 +7,10 @@ test:
 lint:
 	@clj -M:lint
 
+.PHONY: bench
+bench:
+	@lein exec -p src/script/bench.clj
+
 .PHONY: puzzle run
 puzzle run:
 	@lein exec -p src/script/puzzle.clj 4

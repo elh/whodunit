@@ -175,6 +175,8 @@ See [Makefile](Makefile) for dev commands. Clojure environment set up using Nix.
 ```
 > make test
 > make lint
+
+> make bench
 ```
 
 ### TODO:
