@@ -29,7 +29,7 @@ Let's generate a new variation of the famous Zebra Puzzle. With 5 records and 5 
 (puzzle config)
 
 ;; generate a puzzle rule set with some starting rules
-;; e.g. the first rule is red house is in the middle
+;; e.g. the first rule is "the red house is in the middle"
 (let [hs (lvar)]
   (puzzle config hs [{:data {:type :membero
                              :kvs {:house-color "red" :house-idx 3}}
@@ -46,73 +46,73 @@ Let's generate a new variation of the famous Zebra Puzzle. With 5 records and 5 
                          :goal (membero (new-rec zebra/config {:pet "zebra" :name "japanese"}) hs)}]))
 ```
 
-```plaintext
-> make new-zebra
-"Elapsed time: 952.507166 msecs"
-
-Config:
-{:values
- {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"],
-  :house-idx [1 2 3 4 5],
-  :house-color ["blue" "green" "ivory" "red" "yellow"],
-  :drinks ["coffee" "milk" "orange-juice" "tea" "water"],
-  :smokes
-  ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"],
-  :pet ["dog" "fox" "horse" "snail" "zebra"]}}
-
-Rules:
-1. name is spaniard and house-color is yellow
-2. name is ukrainian and pet is snail
-3. house-idx is 4 and drinks is water
-4. drinks is milk and house-idx is 1
-5. smokes is old-gold and name is norwegian
-6. name is japanese and pet is horse
-7. house-idx is 4 and name is japanese
-8. smokes is lucky-strike and drinks is milk
-9. house-color is yellow and house-idx is 3
-10. house-color is yellow and drinks is coffee
-11. pet is fox and house-idx is 3
-12. smokes is kools and name is japanese
-13. pet is snail and house-color is blue
-14. house-idx is 1 and pet is zebra
-15. drinks is coffee and name is spaniard
-16. name is japanese and house-color is ivory
-17. name is ukrainian and house-idx is 2
-18. house-color is green and drinks is milk
-19. house-color is blue and smokes is parliaments
-20. name is norwegian and drinks is tea
-
-Solution:
-({:house-idx 4,
-  :house-color "ivory",
-  :name "japanese",
-  :drinks "water",
-  :smokes "kools",
-  :pet "horse"}
- {:house-idx 1,
-  :house-color "green",
-  :name "englishman",
-  :drinks "milk",
-  :smokes "lucky-strike",
-  :pet "zebra"}
- {:house-idx 5,
-  :house-color "red",
-  :name "norwegian",
-  :drinks "tea",
-  :smokes "old-gold",
-  :pet "dog"}
- {:house-idx 2,
-  :house-color "blue",
-  :name "ukrainian",
-  :drinks "orange-juice",
-  :smokes "parliaments",
-  :pet "snail"}
- {:house-idx 3,
-  :house-color "yellow",
-  :name "spaniard",
-  :drinks "coffee",
-  :smokes "chesterfields",
-  :pet "fox"})
+```bash
+make new-zebra
+# "Elapsed time: 952.507166 msecs"
+#
+# Config:
+# {:values
+#  {:name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian"],
+#   :house-idx [1 2 3 4 5],
+#   :house-color ["blue" "green" "ivory" "red" "yellow"],
+#   :drinks ["coffee" "milk" "orange-juice" "tea" "water"],
+#   :smokes
+#   ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"],
+#   :pet ["dog" "fox" "horse" "snail" "zebra"]}}
+#
+# Rules:
+# 1. name is spaniard and house-color is yellow
+# 2. name is ukrainian and pet is snail
+# 3. house-idx is 4 and drinks is water
+# 4. drinks is milk and house-idx is 1
+# 5. smokes is old-gold and name is norwegian
+# 6. name is japanese and pet is horse
+# 7. house-idx is 4 and name is japanese
+# 8. smokes is lucky-strike and drinks is milk
+# 9. house-color is yellow and house-idx is 3
+# 10. house-color is yellow and drinks is coffee
+# 11. pet is fox and house-idx is 3
+# 12. smokes is kools and name is japanese
+# 13. pet is snail and house-color is blue
+# 14. house-idx is 1 and pet is zebra
+# 15. drinks is coffee and name is spaniard
+# 16. name is japanese and house-color is ivory
+# 17. name is ukrainian and house-idx is 2
+# 18. house-color is green and drinks is milk
+# 19. house-color is blue and smokes is parliaments
+# 20. name is norwegian and drinks is tea
+#
+# Solution:
+# ({:house-idx 4,
+#   :house-color "ivory",
+#   :name "japanese",
+#   :drinks "water",
+#   :smokes "kools",
+#   :pet "horse"}
+#  {:house-idx 1,
+#   :house-color "green",
+#   :name "englishman",
+#   :drinks "milk",
+#   :smokes "lucky-strike",
+#   :pet "zebra"}
+#  {:house-idx 5,
+#   :house-color "red",
+#   :name "norwegian",
+#   :drinks "tea",
+#   :smokes "old-gold",
+#   :pet "dog"}
+#  {:house-idx 2,
+#   :house-color "blue",
+#   :name "ukrainian",
+#   :drinks "orange-juice",
+#   :smokes "parliaments",
+#   :pet "snail"}
+#  {:house-idx 3,
+#   :house-color "yellow",
+#   :name "spaniard",
+#   :drinks "coffee",
+#   :smokes "chesterfields",
+#   :pet "fox"})
 ```
 
 Another example
@@ -124,77 +124,30 @@ Another example
                   :location ["park" "pier" "palace"]}})
 ```
 
-```plaintext
-> make puzzle
+```bash
+make puzzle
 ```
 
 ### Context: Solving the Zebra Puzzle with core.logic
 
-```plaintext
-> make zebra
----------- Zebra Puzzle - using vectors ----------
-"Elapsed time: 13.858833 msecs"
-{:soln
- ((1 "yellow" "norwegian" "water" "kools" "fox")
-  (2 "blue" "ukrainian" "tea" "chesterfields" "horse")
-  (3 "red" "englishman" "milk" "old-gold" "snail")
-  (4 "ivory" "spaniard" "orange-juice" "lucky-strike" "dog")
-  (5 "green" "japanese" "coffee" "parliaments" "zebra")),
- :grounded? true,
- :has-more? false}
+See solutions in [`zebra.clj`](src/whodunit/zebra.clj) that introduced me to core.logic and prototyped the map-based and introspectable rule approach.
 
----------- Zebra Puzzle - using maps ----------
-"Elapsed time: 22.87375 msecs"
-{:soln
- ({:house-idx 1,
-   :house-color "yellow",
-   :nationality "norwegian",
-   :drinks "water",
-   :smokes "kools",
-   :pet "fox"}
-  {:house-idx 2,
-   :house-color "blue",
-   :nationality "ukrainian",
-   :drinks "tea",
-   :smokes "chesterfields",
-   :pet "horse"}
-  {:house-idx 3,
-   :house-color "red",
-   :nationality "englishman",
-   :drinks "milk",
-   :smokes "old-gold",
-   :pet "snail"}
-  {:house-idx 4,
-   :house-color "ivory",
-   :nationality "spaniard",
-   :drinks "orange-juice",
-   :smokes "lucky-strike",
-   :pet "dog"}
-  {:house-idx 5,
-   :house-color "green",
-   :nationality "japanese",
-   :drinks "coffee",
-   :smokes "parliaments",
-   :pet "zebra"}),
- :grounded? true,
- :has-more? false}
+```bash
+make zebra
 ```
 
 ### Development
 See [Makefile](Makefile) for dev commands. Clojure environment set up using Nix.
-```
-> make test
-> make lint
-
-> make bench
+```bash
+make lint
+make test
+make bench
 ```
 
 ### TODO:
-* Support more rule types. I am starting very simple but this is easily extensible. Take inspiration from logic puzzles and add rules thematic to murder mysteries.
 * ✅ Support constraining the solution that are not presented as rules. e.g. "The solution must be that dave is guilty, but that should not be directly given away by a rule".
-* Make the additional details on rules optional. Probably only the actual goal is strictly required.
-* Support user-defined constraints. e.g. Never generate a rule that on its own gives away who is guilty.
+* ✅ Make the additional details on rules optional. puzzle accepts either structured goal records or just record expressions although some functionality will be limited.
+* Support more rule types. I am starting very simple but this is easily extensible. Take inspiration from logic puzzles and add rules thematic to murder mysteries.
+* Support an interactive mode of puzzle generation where all rules are not all created at once.
 * Intelligently sort rules to optimize solving.
 * Steer generation to produce "good" puzzles. e.g. at a tunable level of difficulty.
-* Support an interactive mode of puzzle generation where all rules are not all created at once.
-* Improve rule copy. Not a priority until rule set is more developed. Maybe this should always be a caller-sided problem.

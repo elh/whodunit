@@ -32,12 +32,21 @@
                                 :drinks ["coffee" "milk" "orange-juice" "tea" "water"]
                                 :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments"]
                                 :pet ["dog" "fox" "horse" "snail" "zebra"]}}
+               "6" {:values {:house-idx [1 2 3 4 5 6]
+                             :house-color ["blue" "green" "ivory" "red" "yellow" "black"]
+                             ;; NOTE: renamed from nationality to use with puzzle fns
+                             :name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian" "irish"]
+                             :drinks ["coffee" "milk" "orange-juice" "tea" "water" "beer"]
+                             :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments" "marlboro"]
+                             :pet ["dog" "fox" "horse" "snail" "zebra" "cat"]
+                             :location ["park" "pier" "palace" "plaza" "parlor" "pub"]
+                             :item ["comb" "cowl" "coin" "cap" "crowbar" "cane"]}}
               "7" {:values {:house-idx [1 2 3 4 5 6 7]
-                            :house-color ["blue" "green" "ivory" "red" "yellow", "black", "white"]
+                            :house-color ["blue" "green" "ivory" "red" "yellow" "black" "white"]
                             ;; NOTE: renamed from nationality to use with puzzle fns
-                            :name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian", "irish", "nigerian"]
-                            :drinks ["coffee" "milk" "orange-juice" "tea" "water", "beer", "wine"]
-                            :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments", "marlboro", "camel"]
-                            :pet ["dog" "fox" "horse" "snail" "zebra", "cat", "fish"]
-                            :location ["park" "pier" "palace" "plaza" "parlor", "pub", "pool"]
-                            :item ["comb" "cowl" "coin" "cap" "crowbar", "cane", "candle"]}}})
+                            :name ["englishman" "japanese" "norwegian" "spaniard" "ukrainian" "irish" "nigerian"]
+                            :drinks ["coffee" "milk" "orange-juice" "tea" "water" "beer" "wine"]
+                            :smokes ["chesterfields" "kools" "lucky-strike" "old-gold" "parliaments" "marlboro" "camel"]
+                            :pet ["dog" "fox" "horse" "snail" "zebra" "cat" "fish"]
+                            :location ["park" "pier" "palace" "plaza" "parlor" "pub" "pool"]
+                            :item ["comb" "cowl" "coin" "cap" "crowbar" "cane" "candle"]}}})

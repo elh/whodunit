@@ -33,6 +33,14 @@
                {:data {:type :membero
                        :kvs {:pet "zebra" :name "japanese"}}
                 :goal (membero (new-rec zebra/config {:pet "zebra" :name "japanese"}) hs)}]))
+      ;; alternatively, without structure
+      ;; (puzzle zebra/config
+      ;;         hs
+      ;;         ;; bootstrap some rules
+      ;;         [(membero (new-rec zebra/config {:house-color "red" :house-idx 3}) hs)]
+      ;;         ;; add some constraints on the solution that are hidden from the generated rules
+      ;;         [(membero (new-rec zebra/config {:drinks "water" :name "norwegian"}) hs)
+      ;;          (membero (new-rec zebra/config {:pet "zebra" :name "japanese"}) hs)]))
     (puzzle zebra/config)))
 
 (let [res (time (generate))]

@@ -72,7 +72,8 @@
 ;;
 ;; TODO: support more rule (hint) types. I am starting very simple but this is easily extensible. Take inspiration from
 ;;       logic puzzles and add rules thematic to murder mysteries.
-;; TODO: add some user-defined constraints. e.g. never generate a rule that on its own gives away who is guilty
+;; TODO: add some user-defined constraints. this is very rule specific e.g. never generate a rule that on its own gives
+;;       away who is guilty
 (defn generate-rule [config q]
   (let [ks (keys (get config :values))
         k1 (rand-nth ks)
@@ -104,16 +105,14 @@
 ;; include rules that narrow the solution space until we arrive at a single solution.
 ;;
 ;; Config :values define the set of possible records key-values. unique :name values are required.
-;; Returns the solution and a list of rules with a :goal function, structured :data map, and :code text.
+;; Rules and constraint arguments should be vectors of structured goal records. If they are not maps, they are assumed
+;; to just be goal expressions and some functionality will be limited.
+;; Returns the solution and a list of structured goal records with a :goal function, structured :data map, and :code text.
 ;;
-;; TODO: support constraining the solution that are not presented as rules. e.g. "the solution must be that dave is
-;;       guilty, but that should not be directly given away by a rule"
-;; TODO: make the additional details on rules optional. probably only the actual goal is strictly required.
 ;; TODO: intelligently sort rules to optimize solving
-;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
-;; TODO: shuffle config on each iteration so real solution isn't actually pre-defined
 ;; TODO: support an interactive mode of puzzle generation where all rules are not all created at once
 ;; TODO: steer generation to produce "good" puzzles. e.g. at a tunable level of difficulty
+;; TODO: stop based on a user-defined condition. e.g. "we know who is guilty"
 (defn puzzle
   ([config] (puzzle config (lvar) [] []))
   ;; hs is an lvar defined outside of run so we can inject rules
@@ -152,8 +151,8 @@
                                          ;; pin order of :name to prevent redundant solutions. do not use shuffled!
                                          (== (get-in config [:values :name]) (get-in lvars [:values :name]))]
                                         ;; this puzzle's and secret constraints
-                                        (mapv #(:goal %) new-rules)
-                                        (mapv #(:goal %) constraints)
+                                        (mapv #(if (map? %) (:goal %) %) new-rules)
+                                        (mapv #(if (map? %) (:goal %) %) constraints)
                                         ;; defining solution space given the config. this could be made more flexible
                                         [(everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
                                                  (keys (get lvars :values)))])))))]
@@ -172,11 +171,14 @@
                       :soln (:soln res)})
                    (recur new-rules (:soln res))))))))))))
 
-;; Jank text generation. Note that when presenting, you will probably want to randomize rule order.
-;; TODO: improve this...
+;; Jank default text generation. Good text has to be config-aware so there is not much point improving this too much.
+;; Note that when presenting, you will probably want to randomize rule order.
 (defn rules-text [rules]
   (map (fn [r]
          (let [kvs (:kvs (:data r))]
-           (str (name (ffirst kvs)) " is " (second (first kvs)) " and "
-                (name (first (second kvs))) " is " (second (second kvs)))))
+           (if (nil? kvs)
+             ;; if rule is not a structured goal record, it cannot be automatically formatted
+             "< Cannot be automatically formatted >"
+             (str (name (ffirst kvs)) " is " (second (first kvs)) " and "
+                  (name (first (second kvs))) " is " (second (second kvs))))))
        rules))
