@@ -15,21 +15,24 @@
 
 ;; If true, let's create with the same answers to the final question as the original puzzle
 ;; "who drinks water? Who owns the zebra?"
-(def same-soln? false)
+(def same-soln? true)
 
 (defn generate []
   (if same-soln?
     (let [hs (lvar)]
-      (puzzle zebra/config hs [{:data {:type :membero
-                                       :kvs {:drinks "water"
-                                             :name "norwegian"}}
-                                :goal (membero (new-rec zebra/config {:drinks "water"
-                                                                      :name "norwegian"}) hs)}
-                               {:data {:type :membero
-                                       :kvs {:pet "zebra"
-                                             :name "japanese"}}
-                                :goal (membero (new-rec zebra/config {:pet "zebra"
-                                                                      :name "japanese"}) hs)}]))
+      (puzzle zebra/config
+              hs
+              ;; bootstrap some rules
+              [{:data {:type :membero
+                       :kvs {:house-color "red" :house-idx 3}}
+                :goal (membero (new-rec zebra/config {:house-color "red" :house-idx 3}) hs)}]
+              ;; add some constraints on the solution that are hidden from the generated rules
+              [{:data {:type :membero
+                       :kvs {:drinks "water" :name "norwegian"}}
+                :goal (membero (new-rec zebra/config {:drinks "water" :name "norwegian"}) hs)}
+               {:data {:type :membero
+                       :kvs {:pet "zebra" :name "japanese"}}
+                :goal (membero (new-rec zebra/config {:pet "zebra" :name "japanese"}) hs)}]))
     (puzzle zebra/config)))
 
 (let [res (time (generate))]

@@ -115,12 +115,16 @@
 ;; TODO: support an interactive mode of puzzle generation where all rules are not all created at once
 ;; TODO: steer generation to produce "good" puzzles. e.g. at a tunable level of difficulty
 (defn puzzle
-  ([config] (puzzle config (lvar) []))
+  ([config] (puzzle config (lvar) [] []))
   ;; hs is an lvar defined outside of run so we can inject rules
-  ;; rules as a vector of goals relative to hs. A vector enables introspection and reorderings which could not
-  ;; be done if just handed an opaque `all` goal.
-  ([config hs rules]
-   (let [lvars (init-lvars config)
+  ;; rules is a vector of goal records relative to hs. This may optionally be provided to seed starting rules. A vector
+  ;; enables introspection and reorderings which could not be done if just handed an opaque `all` goal.
+  ([config hs rules] (puzzle config hs rules []))
+  ;; constraints is a vector of secret goal records relative to hs. This may optionally be provided to specify the shape
+  ;; of the solution without having to give it away in the rules
+  ([config hs rules constraints]
+   (let [constraints (vec constraints)
+         lvars (init-lvars config)
          ;; shuffled once up front
          config (assoc config :values (reduce-kv (fn [m k v] (assoc m k (shuffle v)))
                                                  {}
@@ -133,7 +137,8 @@
                           (generate-rule config hs)
                           (generate-rule-from-soln last-soln config hs)))]
          ;; prevent identical duplicate rules
-         (if (and (some? new-rule) (contains? (set (map #(:data %) rules)) (:data new-rule)))
+         (if (and (some? new-rule) (contains? (set (concat (map #(:data %) rules)
+                                                           (map #(:data %) constraints))) (:data new-rule)))
            (do
              (when DEBUG (println "DEBUG - duplicate rule"))
              (recur rules last-soln))
@@ -146,8 +151,9 @@
                                          (== q (get lvars :records))
                                          ;; pin order of :name to prevent redundant solutions. do not use shuffled!
                                          (== (get-in config [:values :name]) (get-in lvars [:values :name]))]
-                                        ;; puzzle-specific rules
+                                        ;; this puzzle's and secret constraints
                                         (mapv #(:goal %) new-rules)
+                                        (mapv #(:goal %) constraints)
                                         ;; defining solution space given the config. this could be made more flexible
                                         [(everyg (fn [k] (permuteo (get-in config [:values k]) (get-in lvars [:values k])))
                                                  (keys (get lvars :values)))])))))]

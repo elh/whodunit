@@ -28,12 +28,22 @@ Let's generate a new variation of the famous Zebra Puzzle. With 5 records and 5 
 ;; generate a puzzle rule set
 (puzzle config)
 
-;; generate a puzzle rule set with starting rules
-;; TODO: support providing a secret constraint over the solution that is not directly exposed as a rule
+;; generate a puzzle rule set with some starting rules
+;; e.g. the first rule is red house is in the middle
 (let [hs (lvar)]
   (puzzle config hs [{:data {:type :membero
-                             :kvs {:drinks "water" :name "norwegian"}}
-                      :goal (membero (new-rec config {:drinks "water" :name "norwegian"}) hs)}]))
+                             :kvs {:house-color "red" :house-idx 3}}
+                      :goal (membero (new-rec zebra/config {:house-color "red" :house-idx 3}) hs)}]))
+
+;; generate a puzzle rule set with some constraints on the solution that are hidden from the resulting rules
+;; e.g. this puzzle will be generated with the same answer to the ultimate question of the original zebra puzzle
+(let [hs (lvar)]
+  (puzzle config hs [] [{:data {:type :membero
+                                :kvs {:drinks "water" :name "norwegian"}}
+                         :goal (membero (new-rec zebra/config {:drinks "water" :name "norwegian"}) hs)}
+                        {:data {:type :membero
+                                :kvs {:pet "zebra" :name "japanese"}}
+                         :goal (membero (new-rec zebra/config {:pet "zebra" :name "japanese"}) hs)}]))
 ```
 
 ```plaintext
@@ -181,7 +191,7 @@ See [Makefile](Makefile) for dev commands. Clojure environment set up using Nix.
 
 ### TODO:
 * Support more rule types. I am starting very simple but this is easily extensible. Take inspiration from logic puzzles and add rules thematic to murder mysteries.
-* Support constraining the solution that are not presented as rules. e.g. "The solution must be that dave is guilty, but that should not be directly given away by a rule".
+* ✅ Support constraining the solution that are not presented as rules. e.g. "The solution must be that dave is guilty, but that should not be directly given away by a rule".
 * Make the additional details on rules optional. Probably only the actual goal is strictly required.
 * Support user-defined constraints. e.g. Never generate a rule that on its own gives away who is guilty.
 * Intelligently sort rules to optimize solving.
