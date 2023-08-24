@@ -1,4 +1,4 @@
-(ns script.debug-order
+(ns script.deprecated.debug-order
   (:gen-class)
   (:refer-clojure :exclude [==])
   (:require [clojure.core.logic :refer :all]
