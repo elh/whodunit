@@ -5,6 +5,8 @@
             [whodunit.core :refer :all]
             [whodunit.zebra :as z]))
 
+(def timeout-ms 1000)
+
 (defmacro with-time
   "Evaluates expr returns the time it as millis. Does not return the value of expr."
   [expr]
@@ -13,15 +15,34 @@
      {:result ret#
       :millis (/ (double (- (. System (nanoTime)) start#)) 1000000.0)}))
 
+(defn with-timeout
+  [f timeout-ms]
+  (let [executor (java.util.concurrent.Executors/newSingleThreadExecutor)
+        future (java.util.concurrent.FutureTask. f)]
+    (.submit executor future)
+    (try
+      (.get future timeout-ms java.util.concurrent.TimeUnit/MILLISECONDS)
+      (catch java.util.concurrent.TimeoutException e
+        (do
+          (.cancel future true)
+          :timed-out))
+      (finally
+        (.shutdown executor)))))
+
 ;; Approach
 ;; randomly sort rules
 ;; rotate them until best perf and then pin it.
 ;; name the rules
 
 (defn time-puzzle [config hs goals]
-  (:millis (with-time (puzzle config
-                              hs
-                              (vec (map-indexed (fn [idx x] {:idx idx :goal x}) goals))))))
+  (let [res (with-timeout
+              #(with-time (puzzle config
+                                  hs
+                                  (vec (map-indexed (fn [idx x] {:idx idx :goal x}) goals))))
+              timeout-ms)]
+    (if (= :timed-out res)
+      timeout-ms
+      (:millis res))))
 
 (defn avg [coll]
   (/ (reduce + 0 coll) (count coll)))
@@ -36,8 +57,16 @@
 ;; (defn rotations [v]
 ;;   (take (count v) (iterate rotate v)))
 
-(println (map (fn [i]
-                (let [hs (lvar)
-                      times (take-last 2 (repeatedly 3 #(time-puzzle z/config hs (nth (iterate rotate (z/zebra-goals hs)) i))))]
-                  (println (avg times))))
-              (range 15)))
+;; TODO: fix bug. this fails to properly terminate after run via lein exec
+
+;; UPDATE: put this on pause. managing building of the incrementally sorted order seems a bit annoying i guess you could
+;; track a record of all the indices and then rebuild it on each outer loop?
+
+(let [res (doall (map (fn [i]
+                        (let [hs (lvar)
+                              ;; take the last n of m runs so that it is warmed up
+                              times (take-last 2 (repeatedly 3 #(time-puzzle z/config hs (nth (iterate rotate (z/zebra-goals hs)) i))))]
+                          (println (avg times))
+                          (avg times)))
+                      (range (dec (count (z/zebra-goals (lvar)))))))]
+  (println res))
