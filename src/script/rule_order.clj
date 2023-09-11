@@ -5,7 +5,7 @@
             [whodunit.core :refer :all]
             [whodunit.zebra :as z]))
 
-(def timeout-ms 1000)
+(def timeout-ms 3000)
 
 (defmacro with-time
   "Evaluates expr returns the time it as millis. Does not return the value of expr."

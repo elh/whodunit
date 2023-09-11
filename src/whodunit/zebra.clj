@@ -129,46 +129,50 @@
 ;; zebra-goals returns the puzzle rules as a vector of goals. This enables introspection and reorderings which could not
 ;; be done if just handled as an opaque (all ...) goal.
 (defn zebra-goals [q]
-  (letfn [(righto [x y]
-                  (fd/+ x 1 y))
-          (nexto [x y]
-                 (conde [(fd/+ x 1 y)]
-                        [(fd/- x 1 y)]))
-          (ordero [config idx-rel key x y hs]
-                  (fresh [x-idx y-idx]
-                         (membero x hs)
-                         (membero y hs)
-                         (== x (new-rec config {key x-idx}))
-                         (== y (new-rec config {key y-idx}))
-                         (idx-rel x-idx y-idx)))]
-    [;; this ordering from core.logic benchmark v. original problem statement improves latency from 1200ms to 23ms!!!
-     (membero (new-rec config {:house-idx 3
-                               :drinks "milk"}) q)
-     (membero (new-rec config {:house-idx 1
-                               :name "norwegian"}) q)
-     (ordero config nexto :house-idx (new-rec config {:name "norwegian"}) (new-rec config {:house-color "blue"}) q)
-     (ordero config righto :house-idx (new-rec config {:house-color "ivory"}) (new-rec config {:house-color "green"}) q)
-     (membero (new-rec config {:house-color "red"
-                               :name "englishman"}) q)
-     (membero (new-rec config {:house-color "yellow"
-                               :smokes "kools"}) q)
-     (membero (new-rec config {:name "spaniard"
-                               :pet "dog"}) q)
-     (membero (new-rec config {:house-color "green"
-                               :drinks "coffee"}) q)
-     (membero (new-rec config {:name "ukrainian"
-                               :drinks "tea"}) q)
-     (membero (new-rec config {:drinks "orange-juice"
-                               :smokes "lucky-strike"}) q)
-     (membero (new-rec config {:name "japanese"
-                               :smokes "parliaments"}) q)
-     (membero (new-rec config {:smokes "old-gold"
-                               :pet "snail"}) q)
-     (ordero config nexto :house-idx (new-rec config {:smokes "kools"}) (new-rec config {:pet "horse"}) q)
-     (ordero config nexto :house-idx (new-rec config {:smokes "chesterfields"}) (new-rec config {:pet "fox"}) q)
-     ;; implied by the questions
-     (membero (new-rec config {:drinks "water"}) q)
-     (membero (new-rec config {:pet "zebra"}) q)]))
+  (let [lvars (init-lvars config)]
+    (letfn [(righto [x y]
+              (fd/+ x 1 y))
+            (nexto [x y]
+              (conde [(fd/+ x 1 y)]
+                     [(fd/- x 1 y)]))
+            (ordero [config idx-rel key x y hs]
+              (fresh [x-idx y-idx]
+                     (membero x hs)
+                     (membero y hs)
+                     (== x (new-rec config {key x-idx}))
+                     (== y (new-rec config {key y-idx}))
+                     (idx-rel x-idx y-idx)))]
+      [(== q (get lvars :records))
+       (everyg #(fd/in % (fd/domain 1 2 3 4 5)) (get-in lvars [:values :house-idx]))
+       ;; (get-in lvars [:values :name])
+       ;; this ordering from core.logic benchmark v. original problem statement improves latency from 1200ms to 23ms!!!
+       (membero (new-rec config {:house-idx 3
+                                 :drinks "milk"}) q)
+       (membero (new-rec config {:house-idx 1
+                                 :name "norwegian"}) q)
+       (ordero config nexto :house-idx (new-rec config {:name "norwegian"}) (new-rec config {:house-color "blue"}) q)
+       (ordero config righto :house-idx (new-rec config {:house-color "ivory"}) (new-rec config {:house-color "green"}) q)
+       (membero (new-rec config {:house-color "red"
+                                 :name "englishman"}) q)
+       (membero (new-rec config {:house-color "yellow"
+                                 :smokes "kools"}) q)
+       (membero (new-rec config {:name "spaniard"
+                                 :pet "dog"}) q)
+       (membero (new-rec config {:house-color "green"
+                                 :drinks "coffee"}) q)
+       (membero (new-rec config {:name "ukrainian"
+                                 :drinks "tea"}) q)
+       (membero (new-rec config {:drinks "orange-juice"
+                                 :smokes "lucky-strike"}) q)
+       (membero (new-rec config {:name "japanese"
+                                 :smokes "parliaments"}) q)
+       (membero (new-rec config {:smokes "old-gold"
+                                 :pet "snail"}) q)
+       (ordero config nexto :house-idx (new-rec config {:smokes "kools"}) (new-rec config {:pet "horse"}) q)
+       (ordero config nexto :house-idx (new-rec config {:smokes "chesterfields"}) (new-rec config {:pet "fox"}) q)
+       ;; implied by the questions
+       (membero (new-rec config {:drinks "water"}) q)
+       (membero (new-rec config {:pet "zebra"}) q)])))
 
 ;; zebrao-whodunit implements a zebrao goal using the zebra-goals vector.
 ;; NOTE: current zebra rules actually allow for some degenerate solutions where some values are duplicated. We handle
