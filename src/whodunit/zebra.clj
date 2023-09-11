@@ -171,7 +171,9 @@
      (membero (new-rec config {:pet "zebra"}) q)]))
 
 ;; zebrao-whodunit implements a zebrao goal using the zebra-goals vector.
-;; order constraint mimics what puzzle will enforce
+;; NOTE: current zebra rules actually allow for some degenerate solutions where some values are duplicated. We handle
+;; this correctly in puzzle but not in these original zebra examples. They happen to force a unique solution in when
+;; at least the house idx's are forced to be unique; not so if we just do that for nationality.
 (defn zebrao-whodunit [q]
-  (and* (concat [(== q (map #(new-rec config {:name %}) (get-in config [:values :name])))]
+  (and* (concat [(== q (map #(new-rec config {:house-idx %}) (range 1 6)))]
                 (zebra-goals q))))
