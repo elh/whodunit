@@ -16,6 +16,7 @@
       :millis (/ (double (- (. System (nanoTime)) start#)) 1000000.0)}))
 
 (defn with-timeout
+  "Evaluate unary function f with timeout in millis. Returns :timed-out if timeout is exceeded."
   [f timeout-ms]
   (let [executor (java.util.concurrent.Executors/newSingleThreadExecutor)
         future (java.util.concurrent.FutureTask. f)]
@@ -44,6 +45,15 @@
       timeout-ms
       (:millis res))))
 
+;; TODO: should not be generating puzzle. just run but we need to thread the lvar through
+(defn time-run+ [goal]
+  (let [res (with-timeout
+              #(with-time (run+ goal))
+              timeout-ms)]
+    (if (= :timed-out res)
+      timeout-ms
+      (:millis res))))
+
 (defn avg [coll]
   (/ (reduce + 0 coll) (count coll)))
 
@@ -62,10 +72,20 @@
 ;; UPDATE: put this on pause. managing building of the incrementally sorted order seems a bit annoying i guess you could
 ;; track a record of all the indices and then rebuild it on each outer loop?
 
+;; (let [res (doall (map (fn [i]
+;;                         (let [hs (lvar)
+;;                               ;; take the last n of m runs so that it is warmed up
+;;                               times (take-last 2 (repeatedly 3 #(time-puzzle z/config hs (nth (iterate rotate (z/zebra-goals hs)) i))))]
+;;                           (println (avg times))
+;;                           (avg times)))
+;;                       (range (dec (count (z/zebra-goals (lvar)))))))]
+;;   (println res))
+
 (let [res (doall (map (fn [i]
-                        (let [hs (lvar)
-                              ;; take the last n of m runs so that it is warmed up
-                              times (take-last 2 (repeatedly 3 #(time-puzzle z/config hs (nth (iterate rotate (z/zebra-goals hs)) i))))]
+                        (let [;; take the last n of m runs so that it is warmed up
+                              times (take-last 2 (repeatedly 3 #(time-run+ (fn [q]
+                                                                             (and*
+                                                                              (nth (iterate rotate (z/zebra-goals q)) i))))))]
                           (println (avg times))
                           (avg times)))
                       (range (dec (count (z/zebra-goals (lvar)))))))]
