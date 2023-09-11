@@ -171,5 +171,7 @@
      (membero (new-rec config {:pet "zebra"}) q)]))
 
 ;; zebrao-whodunit implements a zebrao goal using the zebra-goals vector.
+;; order constraint mimics what puzzle will enforce
 (defn zebrao-whodunit [q]
-  (and* (zebra-goals q)))
+  (and* (concat [(== q (map #(new-rec config {:name %}) (get-in config [:values :name])))]
+                (zebra-goals q))))

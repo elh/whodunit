@@ -148,7 +148,7 @@
                               (into [] (concat
                                         [(== hs q)
                                          (== q (get lvars :records))
-                                         ;; pin order of :name to prevent redundant solutions. do not use shuffled!
+                                         ;; pin order of :name to prevent redundant solutions.
                                          (== (get-in config [:values :name]) (get-in lvars [:values :name]))]
                                         ;; this puzzle's and secret constraints
                                         (mapv #(if (map? %) (:goal %) %) new-rules)
