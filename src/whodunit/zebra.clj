@@ -170,7 +170,6 @@
      (membero (new-rec config {:drinks "water"}) q)
      (membero (new-rec config {:pet "zebra"}) q)]))
 
-;; zebrao-whodunit implements a zebrao goal using the zebra-goals vector and config.
+;; zebrao-whodunit implements a zebrao goal using the zebra-goals vector.
 (defn zebrao-whodunit [q]
-  (and* (concat [(== q (map #(new-rec config {:house-idx %}) (range 1 6)))]
-                (zebra-goals q))))
+  (and* (zebra-goals q)))

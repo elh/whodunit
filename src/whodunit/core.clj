@@ -161,7 +161,7 @@
              (if (nil? (:soln res))
                (if (some? new-rule)
                  (recur rules last-soln)
-                 (throw (Exception. "Initial rules provided to puzzle-fast have no valid solution")))
+                 (throw (Exception. "Initial rules provided to puzzle have no valid solution")))
                (do
                  (when (and DEBUG (some? new-rule)) (println "DEBUG - added rule:" (count new-rules) "rules\nDEBUG - rule code:" (:code new-rule)))
                  (if (and (:grounded? res) (not (:has-more? res)))

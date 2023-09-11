@@ -34,11 +34,6 @@
   (time (run+ zebrao)))
 (pp/pprint (time (run+ zebrao)))
 
-(println "")
-(println "=======================================================")
-(println "========== Debugging puzzle-fast-fixed-order ==========")
-(println "=======================================================")
-
 ;; 24 ms
 ;;
 ;; same speed as before.

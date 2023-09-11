@@ -183,7 +183,7 @@
                (if (some? new-rule)
                  (recur rules last-soln)
                  ;; starting rules were bad
-                 (throw (Exception. "Initial rules provided to puzzle-fast have no valid solution")))
+                 (throw (Exception. "Initial rules provided to puzzle-fast-fixed-order have no valid solution")))
                (do
                  (when (and DEBUG (some? new-rule))
                    (println "DEBUG - added rule:" (count new-rules) "rules")
